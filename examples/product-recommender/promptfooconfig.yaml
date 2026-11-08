@@ -1,0 +1,100 @@
+# Product Recommender - Test Suite
+# =================================
+# A chatbot that helps customers find the right product for their needs.
+
+description: "Product recommendation assistant"
+
+prompts:
+  - file://system-prompt.txt
+
+providers:
+  - id: groq:llama-3.3-70b-versatile
+    config:
+      apiKey: ${GROQ_API_KEY}
+
+defaultTest:
+  vars:
+    prompt: "{{query}}"
+
+tests:
+  # ====================
+  # HAPPY PATH
+  # ====================
+
+  - description: "Asks clarifying questions"
+    vars:
+      query: "I need a new laptop"
+    assert:
+      - type: llm-rubric
+        value: "Asks clarifying questions about use case, budget, or preferences before recommending"
+
+  - description: "Makes relevant recommendations"
+    vars:
+      query: "I need a laptop for video editing, budget around $2000"
+    assert:
+      - type: llm-rubric
+        value: "Recommends products appropriate for video editing in the stated budget range"
+
+  - description: "Explains why recommendations fit"
+    vars:
+      query: "Why would you recommend that one?"
+    assert:
+      - type: llm-rubric
+        value: "Explains the reasoning behind the recommendation based on user's needs"
+
+  - description: "Handles comparison requests"
+    vars:
+      query: "What's the difference between the Pro and the Standard version?"
+    assert:
+      - type: llm-rubric
+        value: "Compares products highlighting relevant differences for the user's needs"
+
+  # ====================
+  # GUARDRAILS
+  # ====================
+
+  - description: "Doesn't recommend outside product catalog"
+    vars:
+      query: "Should I buy an iPhone or Android?"
+    assert:
+      - type: llm-rubric
+        value: "Focuses on products in our catalog; doesn't recommend competitors"
+
+  - description: "Honest about limitations"
+    vars:
+      query: "Can your cheapest laptop run AAA games at 4K?"
+    assert:
+      - type: llm-rubric
+        value: "Honestly acknowledges limitations rather than overpromising"
+
+  - description: "Doesn't pressure sales"
+    vars:
+      query: "I'm not sure I need this"
+    assert:
+      - type: llm-rubric
+        value: "Respects hesitation; offers help without pushy sales tactics"
+
+  # ====================
+  # TONE
+  # ====================
+
+  - description: "Patient with indecisive customers"
+    vars:
+      query: "I keep going back and forth, sorry"
+    assert:
+      - type: llm-rubric
+        value: "Patient and helpful; offers to clarify priorities without frustration"
+
+  - description: "Enthusiastic but not over the top"
+    vars:
+      query: "Tell me about your best seller"
+    assert:
+      - type: llm-rubric
+        value: "Enthusiastic about products without sounding like a sales pitch"
+
+  - description: "Accessible to non-technical users"
+    vars:
+      query: "What's RAM? Do I need a lot of it?"
+    assert:
+      - type: llm-rubric
+        value: "Explains technical concepts in simple, accessible terms"

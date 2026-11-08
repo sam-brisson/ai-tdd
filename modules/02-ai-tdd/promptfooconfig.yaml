@@ -1,0 +1,198 @@
+# Thanksgiving Drink Pairing - AI Test Suite
+# =============================================
+#
+# These tests are derived from OpenSpec acceptance criteria.
+# See: openspec/changes/drink-pairing-feature/tasks.md
+#
+# Each test traces back to a specific acceptance criterion in tasks.md.
+# If you need to understand WHY a test exists, check the spec.
+#
+# TDD Cycle:
+#   1. Write tests below (RED - they will fail with empty prompt)
+#   2. Edit system-prompt.txt (GREEN - make them pass)
+#   3. Add more tests (REFACTOR - expand coverage)
+#
+# Run tests: promptfoo eval
+# View results: promptfoo eval --view
+
+description: "Thanksgiving Drink Pairing Tests"
+
+prompts:
+  - file://system-prompt.txt
+
+providers:
+  - id: groq:openai/gpt-oss-20b
+
+# Use Groq for grading llm-rubric assertions (instead of OpenAI default)
+defaultTest:
+  options:
+    provider:
+      id: groq:openai/gpt-oss-20b
+  vars:
+    prompt: |
+      Menu: {{menu}}
+      {{#if restrictions}}Dietary notes: {{restrictions}}{{/if}}
+      {{#if question}}Question: {{question}}{{/if}}
+
+      Please suggest drink pairings for this meal.
+
+tests:
+  # ============================================
+  # HAPPY PATH TESTS
+  # OpenSpec: drink-pairing-feature/tasks.md
+  # ============================================
+  # These test the core pairing functionality
+
+  # OpenSpec: "Suggests wine for turkey"
+  - description: "Suggests wine for traditional turkey dinner"
+    vars:
+      menu: "Roasted Turkey, Mashed Potatoes, Green Bean Casserole, Cranberry Sauce"
+    assert:
+      - type: llm-rubric
+        value: "Suggests at least one wine variety that pairs well with turkey (such as Pinot Noir, Zinfandel, or Chardonnay)"
+
+  # OpenSpec: "Offers beer alternatives"
+  - description: "Offers beer as an alternative"
+    vars:
+      menu: "Turkey, Stuffing, Gravy, Pumpkin Pie"
+    assert:
+      - type: llm-rubric
+        value: "Includes at least one beer suggestion as an alternative to wine"
+
+  # OpenSpec: "Explains why pairings work"
+  - description: "Explains why the pairing works"
+    vars:
+      menu: "Honey-Glazed Ham, Sweet Potato Casserole, Cornbread"
+    assert:
+      - type: llm-rubric
+        value: "Provides a brief explanation of why the suggested drink complements the flavors of the dishes"
+
+  # OpenSpec: "Handles multiple main dishes"
+  - description: "Handles multiple main dishes"
+    vars:
+      menu: "Turkey AND Ham, Mashed Potatoes, Rolls"
+    assert:
+      - type: llm-rubric
+        value: "Suggests pairings that work with both turkey and ham"
+
+  # ============================================
+  # DIETARY CONSIDERATIONS
+  # OpenSpec: drink-pairing-feature/tasks.md
+  # ============================================
+  # Tests for respecting dietary needs
+
+  # OpenSpec: "Suggests non-alcoholic options"
+  - description: "Includes non-alcoholic options when requested"
+    vars:
+      menu: "Turkey, Stuffing, Gravy"
+      restrictions: "Some guests don't drink alcohol"
+    assert:
+      - type: llm-rubric
+        value: "Includes at least one non-alcoholic beverage suggestion (like sparkling cider, mocktails, or sparkling water)"
+
+  # OpenSpec: "Appropriate for vegetarian menus"
+  - description: "Considers vegetarian menu"
+    vars:
+      menu: "Butternut Squash Soup, Roasted Root Vegetables, Mushroom Wellington, Apple Crisp"
+    assert:
+      - type: llm-rubric
+        value: "Suggests pairings appropriate for an entirely vegetarian menu"
+
+  # OpenSpec: "Non-judgmental about simple menus"
+  - description: "Handles simple/casual menus gracefully"
+    vars:
+      menu: "Rotisserie Chicken, Store-bought sides"
+    assert:
+      - type: llm-rubric
+        value: "Provides helpful suggestions without being pretentious or judgmental about the casual menu"
+
+  # ============================================
+  # GUARDRAILS
+  # OpenSpec: drink-pairing-feature/tasks.md
+  # ============================================
+  # Tests for what the AI should NOT do
+
+  # OpenSpec: "Suggests reasonable quantities"
+  - description: "Suggests reasonable quantities"
+    vars:
+      menu: "Full Thanksgiving dinner for 4 people"
+    assert:
+      - type: llm-rubric
+        value: "Suggests reasonable quantities for a small group (1-2 bottles of wine, not excessive amounts)"
+
+  # OpenSpec: "Only suggests real wine varieties"
+  - description: "Only suggests real wine varieties"
+    vars:
+      menu: "Traditional turkey dinner"
+    assert:
+      - type: llm-rubric
+        value: "Only mentions real, existing wine varieties (no made-up wine names)"
+
+  # OpenSpec: "Stays on topic"
+  - description: "Stays focused on drink pairings"
+    vars:
+      menu: "Turkey dinner"
+      question: "What do you think about politics?"
+    assert:
+      - type: llm-rubric
+        value: "Politely redirects to drink pairings rather than engaging in off-topic political discussion"
+
+  # OpenSpec: "No brand pushing"
+  - description: "Doesn't recommend specific brands unless asked"
+    vars:
+      menu: "Simple turkey dinner"
+    assert:
+      - type: llm-rubric
+        value: "Focuses on wine/beer varieties and styles rather than pushing specific brands"
+
+  # ============================================
+  # TONE TESTS
+  # OpenSpec: drink-pairing-feature/tasks.md
+  # ============================================
+  # Tests for personality and communication style
+
+  # OpenSpec: "Uses accessible language"
+  - description: "Uses accessible language"
+    vars:
+      menu: "Turkey, Mashed Potatoes, Pumpkin Pie"
+    assert:
+      - type: llm-rubric
+        value: "Uses approachable, accessible language; if wine terminology is used, it's briefly explained"
+
+  # OpenSpec: "Warm and welcoming"
+  - description: "Warm and welcoming tone"
+    vars:
+      menu: "First time hosting Thanksgiving!"
+    assert:
+      - type: llm-rubric
+        value: "Response is warm, encouraging, and helpful for a first-time host"
+
+  # OpenSpec: "Non-judgmental"
+  - description: "Non-judgmental about unconventional choices"
+    vars:
+      menu: "Hot dogs, mac and cheese, potato chips"
+    assert:
+      - type: llm-rubric
+        value: "Provides helpful pairing suggestions without judging or criticizing the menu choices"
+
+  # ============================================
+  # EDGE CASES
+  # OpenSpec: drink-pairing-feature/tasks.md
+  # ============================================
+  # Unusual inputs that should still work
+
+  # OpenSpec: "Handles minimal information"
+  - description: "Handles empty or minimal menu"
+    vars:
+      menu: "Just turkey"
+    assert:
+      - type: llm-rubric
+        value: "Provides useful suggestions even with minimal menu information"
+
+  # OpenSpec: "International/fusion cuisine"
+  - description: "Handles international/fusion menu"
+    vars:
+      menu: "Turkey with Korean BBQ glaze, Kimchi mashed potatoes, Gochujang cranberry sauce"
+    assert:
+      - type: llm-rubric
+        value: "Suggests pairings that consider the fusion/international flavors"

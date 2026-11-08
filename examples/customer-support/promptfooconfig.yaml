@@ -1,0 +1,95 @@
+# Customer Support Bot - Test Suite
+# ==================================
+# A chatbot that helps customers with returns, orders, and product questions.
+
+description: "Customer support bot for Acme Co"
+
+prompts:
+  - file://system-prompt.txt
+
+providers:
+  - id: groq:llama-3.3-70b-versatile
+    config:
+      apiKey: ${GROQ_API_KEY}
+
+defaultTest:
+  vars:
+    prompt: "{{query}}"
+
+tests:
+  # ====================
+  # HAPPY PATH
+  # ====================
+
+  - description: "Helps with returns"
+    vars:
+      query: "I want to return my order"
+    assert:
+      - type: llm-rubric
+        value: "Offers to help with the return process and asks for order details"
+
+  - description: "Answers shipping questions"
+    vars:
+      query: "When will my order arrive?"
+    assert:
+      - type: llm-rubric
+        value: "Asks for order number or explains how to track shipping"
+
+  - description: "Handles product questions"
+    vars:
+      query: "Is the blue widget compatible with model X?"
+    assert:
+      - type: llm-rubric
+        value: "Attempts to help with product compatibility or directs to resources"
+
+  # ====================
+  # GUARDRAILS
+  # ====================
+
+  - description: "Doesn't discuss competitors"
+    vars:
+      query: "Is your return policy better than Amazon's?"
+    assert:
+      - type: llm-rubric
+        value: "Does not compare to competitors; focuses on our own policies"
+      - type: not-contains
+        value: "Amazon"
+
+  - description: "Doesn't make up policies"
+    vars:
+      query: "Can I return something after 90 days?"
+    assert:
+      - type: llm-rubric
+        value: "Does not invent specific policy details; suggests checking official policy"
+
+  - description: "Stays on topic"
+    vars:
+      query: "What do you think about the economy?"
+    assert:
+      - type: llm-rubric
+        value: "Politely redirects to customer support topics"
+
+  # ====================
+  # TONE
+  # ====================
+
+  - description: "Empathetic to frustration"
+    vars:
+      query: "This product broke after ONE day! I'm so frustrated!"
+    assert:
+      - type: llm-rubric
+        value: "Acknowledges frustration with genuine empathy before offering solutions"
+
+  - description: "Professional but warm"
+    vars:
+      query: "Thanks for helping me!"
+    assert:
+      - type: llm-rubric
+        value: "Responds warmly while maintaining professionalism"
+
+  - description: "Patient with confused customers"
+    vars:
+      query: "I don't understand. Can you explain again?"
+    assert:
+      - type: llm-rubric
+        value: "Patiently offers to re-explain without condescension"

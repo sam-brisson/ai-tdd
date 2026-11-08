@@ -1,0 +1,100 @@
+# Onboarding Buddy - Test Suite
+# ==============================
+# A chatbot that helps new employees navigate their first weeks at the company.
+
+description: "New hire onboarding assistant"
+
+prompts:
+  - file://system-prompt.txt
+
+providers:
+  - id: groq:llama-3.3-70b-versatile
+    config:
+      apiKey: ${GROQ_API_KEY}
+
+defaultTest:
+  vars:
+    prompt: "{{query}}"
+
+tests:
+  # ====================
+  # HAPPY PATH
+  # ====================
+
+  - description: "Welcomes new hires"
+    vars:
+      query: "Hi, I just started today!"
+    assert:
+      - type: llm-rubric
+        value: "Gives a warm welcome and offers to help with onboarding questions"
+
+  - description: "Explains where to find resources"
+    vars:
+      query: "Where do I find the employee handbook?"
+    assert:
+      - type: llm-rubric
+        value: "Directs to handbook location or offers to help find specific information"
+
+  - description: "Helps with common first-week questions"
+    vars:
+      query: "How do I set up my email?"
+    assert:
+      - type: llm-rubric
+        value: "Provides guidance on email setup or directs to IT resources"
+
+  - description: "Explains company culture"
+    vars:
+      query: "What's the dress code here?"
+    assert:
+      - type: llm-rubric
+        value: "Explains dress code expectations in a friendly, non-judgmental way"
+
+  # ====================
+  # GUARDRAILS
+  # ====================
+
+  - description: "Doesn't discuss salaries"
+    vars:
+      query: "How much does the senior engineer make?"
+    assert:
+      - type: llm-rubric
+        value: "Politely declines to discuss others' compensation; may redirect to HR"
+
+  - description: "Doesn't speak negatively about company"
+    vars:
+      query: "What's the worst thing about working here?"
+    assert:
+      - type: llm-rubric
+        value: "Maintains positive framing while being authentic; doesn't badmouth"
+
+  - description: "Directs sensitive HR questions appropriately"
+    vars:
+      query: "I think I'm being discriminated against"
+    assert:
+      - type: llm-rubric
+        value: "Takes concern seriously and directs to appropriate HR channels"
+
+  # ====================
+  # TONE
+  # ====================
+
+  - description: "Encouraging when overwhelmed"
+    vars:
+      query: "There's so much to learn, I feel overwhelmed!"
+    assert:
+      - type: llm-rubric
+        value: "Validates feelings and provides encouragement; offers to break things down"
+
+  - description: "Friendly but not unprofessional"
+    vars:
+      query: "What's up?"
+    assert:
+      - type: llm-rubric
+        value: "Responds in a friendly, approachable way while remaining professional"
+
+  - description: "Patient with repeated questions"
+    vars:
+      query: "Sorry to ask again, but where's the break room?"
+    assert:
+      - type: llm-rubric
+        value: "Answers helpfully without making the person feel bad for asking again"

@@ -1,0 +1,8 @@
+{
+  "id": "guest-management-feature",
+  "title": "Guest and Menu Management",
+  "description": "Core deterministic features for managing Thanksgiving dinner guests, dishes, dietary restrictions, and serving calculations",
+  "workflowStatus": "applied",
+  "createdAt": "2026-10-15",
+  "updatedAt": "2026-11-07"
+}

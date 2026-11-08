@@ -1,0 +1,15 @@
+{
+  "name": "01-deterministic-tdd",
+  "version": "1.0.0",
+  "description": "Module 1: Deterministic TDD with Playwright",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "dev": "npx serve ../../app -p 3000"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "serve": "^14.2.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "02-ai-tdd",
+  "version": "1.0.0",
+  "description": "Module 2: AI TDD with promptfoo",
+  "scripts": {
+    "test": "promptfoo eval",
+    "test:view": "promptfoo eval --view",
+    "test:nocache": "promptfoo eval --no-cache"
+  },
+  "devDependencies": {
+    "promptfoo": "^0.80.0"
+  }
+}
