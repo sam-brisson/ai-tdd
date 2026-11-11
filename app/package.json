@@ -1,0 +1,13 @@
+{
+  "name": "thanksgiving-dinner-planner",
+  "version": "1.0.0",
+  "description": "Thanksgiving Dinner Planner - Demo App for AI-TDD Workshop",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

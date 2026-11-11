@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Module 2: AI TDD with promptfoo",
   "scripts": {
+    "precheck": "node precheck.js",
     "test": "promptfoo eval",
     "view": "promptfoo view",
     "test:nocache": "promptfoo eval --no-cache"

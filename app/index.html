@@ -152,6 +152,8 @@
       border-left: 4px solid #8b4513;
       padding: 15px;
       margin-top: 15px;
+      max-height: 500px;
+      overflow-y: auto;
     }
 
     .pairing-suggestion {
@@ -160,6 +162,31 @@
 
     .pairing-suggestion strong {
       color: #8b4513;
+    }
+
+    .pairing-suggestion h2, .pairing-suggestion h3, .pairing-suggestion h4 {
+      color: #8b4513;
+      margin: 1em 0 0.5em 0;
+    }
+
+    .pairing-suggestion h2 { font-size: 1.3em; }
+    .pairing-suggestion h3 { font-size: 1.1em; }
+    .pairing-suggestion h4 { font-size: 1em; }
+
+    .pairing-suggestion p {
+      margin: 0.5em 0;
+      line-height: 1.5;
+    }
+
+    .pairing-suggestion table {
+      font-size: 0.85em;
+    }
+
+    .pairing-suggestion code {
+      background: #e5e7eb;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 0.9em;
     }
 
     .modal {
@@ -596,41 +623,148 @@
       }
     }
 
-    // AI Drink Pairings (placeholder - would connect to API)
+    // AI Drink Pairings - calls real Groq API via backend
     suggestPairingsBtn.addEventListener('click', async () => {
-      const menu = state.dishes.map(d => d.name).join(', ');
-      if (!menu) {
+      const dishes = state.dishes.map(d => d.name);
+      if (dishes.length === 0) {
         alert('Add some dishes first!');
         return;
       }
+
+      // Gather dietary restrictions from guests
+      const restrictions = state.guests
+        .filter(g => g.dietaryRestrictions)
+        .map(g => `${g.name}: ${g.dietaryRestrictions}`)
+        .join('; ');
 
       pairingLoading.style.display = 'block';
       pairingSuggestions.style.display = 'none';
       suggestPairingsBtn.disabled = true;
 
-      // Simulate API call (in real app, this would call your AI backend)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      try {
+        const response = await fetch('/api/suggest-pairings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dishes, restrictions })
+        });
 
-      // Mock response
-      document.querySelector('[data-testid="wine-suggestion"]').innerHTML = `
-        <strong>🍷 Wine:</strong> A <strong>Pinot Noir</strong> would pair beautifully with your menu.
-        Its lighter body complements turkey without overpowering it.
-      `;
+        const data = await response.json();
 
-      document.querySelector('[data-testid="beer-suggestion"]').innerHTML = `
-        <strong>🍺 Beer:</strong> Try an <strong>Amber Ale</strong> - the caramel notes
-        complement roasted flavors perfectly.
-      `;
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to get suggestions');
+        }
 
-      document.querySelector('[data-testid="nonalcoholic-suggestion"]').innerHTML = `
-        <strong>🧃 Non-Alcoholic:</strong> <strong>Sparkling Apple Cider</strong> is festive
-        and pairs wonderfully with fall flavors!
-      `;
+        // Display the AI response
+        const suggestionContainer = document.querySelector('[data-testid="wine-suggestion"]');
+        suggestionContainer.innerHTML = formatAIResponse(data.suggestion);
+
+        // Hide the other containers since AI gives unified response
+        document.querySelector('[data-testid="beer-suggestion"]').style.display = 'none';
+        document.querySelector('[data-testid="nonalcoholic-suggestion"]').style.display = 'none';
+
+      } catch (error) {
+        console.error('Pairing error:', error);
+        document.querySelector('[data-testid="wine-suggestion"]').innerHTML = `
+          <strong style="color: #dc2626;">Error:</strong> ${error.message}<br>
+          <small>Make sure the server is running with: <code>npm run dev</code> from modules/01-deterministic-tdd</small>
+        `;
+        document.querySelector('[data-testid="beer-suggestion"]').style.display = 'none';
+        document.querySelector('[data-testid="nonalcoholic-suggestion"]').style.display = 'none';
+      }
 
       pairingLoading.style.display = 'none';
       pairingSuggestions.style.display = 'block';
       suggestPairingsBtn.disabled = false;
     });
+
+    // Format AI response with nice styling (simple markdown parser)
+    function formatAIResponse(text) {
+      // Process markdown tables
+      const lines = text.split('\n');
+      let html = '';
+      let inTable = false;
+      let tableRows = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        // Check if this is a table row (starts and ends with |)
+        if (line.startsWith('|') && line.endsWith('|')) {
+          if (!inTable) {
+            inTable = true;
+            tableRows = [];
+          }
+          tableRows.push(line);
+        } else {
+          // If we were in a table, render it now
+          if (inTable) {
+            html += renderTable(tableRows);
+            inTable = false;
+            tableRows = [];
+          }
+
+          // Process non-table lines
+          if (line.startsWith('### ')) {
+            html += `<h4>${formatInline(line.slice(4))}</h4>`;
+          } else if (line.startsWith('## ')) {
+            html += `<h3>${formatInline(line.slice(3))}</h3>`;
+          } else if (line.startsWith('# ')) {
+            html += `<h2>${formatInline(line.slice(2))}</h2>`;
+          } else if (line.match(/^\d+\.\s/)) {
+            html += `<p style="margin-left: 1em;">${formatInline(line)}</p>`;
+          } else if (line.startsWith('- ') || line.startsWith('• ')) {
+            html += `<p style="margin-left: 1em;">• ${formatInline(line.slice(2))}</p>`;
+          } else if (line === '') {
+            html += '<br>';
+          } else {
+            html += `<p>${formatInline(line)}</p>`;
+          }
+        }
+      }
+
+      // Handle table at end of text
+      if (inTable) {
+        html += renderTable(tableRows);
+      }
+
+      return html;
+    }
+
+    // Format inline markdown (bold, italic, code)
+    function formatInline(text) {
+      return text
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/‑/g, '-'); // normalize dashes
+    }
+
+    // Render markdown table to HTML
+    function renderTable(rows) {
+      if (rows.length < 2) return '';
+
+      let html = '<table style="width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.9em;">';
+
+      rows.forEach((row, idx) => {
+        // Skip separator row (|---|---|)
+        if (row.match(/^\|[\s\-:|]+\|$/)) return;
+
+        const cells = row.split('|').filter(c => c.trim() !== '');
+        const tag = idx === 0 ? 'th' : 'td';
+        const style = idx === 0
+          ? 'background: #f3f4f6; font-weight: bold; padding: 8px; border: 1px solid #e5e7eb; text-align: left;'
+          : 'padding: 8px; border: 1px solid #e5e7eb; vertical-align: top;';
+
+        html += '<tr>';
+        cells.forEach(cell => {
+          html += `<${tag} style="${style}">${formatInline(cell.trim())}</${tag}>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</table>';
+      return html;
+    }
 
     // OpenSpec Cheat Sheet Modal
     const openspecBtn = document.getElementById('openspec-cheatsheet-btn');

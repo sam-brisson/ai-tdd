@@ -59,14 +59,55 @@ cd modules/02-ai-tdd
 npm install
 
 # Get a free API key at https://console.groq.com
-# Then export it in your shell:
-export GROQ_API_KEY=your_key_here
+# Copy .env.example to .env and add your key:
+cp .env.example .env
+# Then edit .env and add: GROQ_API_KEY=your_key_here
 
-# Run tests
-promptfoo eval
+# Run precheck to verify everything is working
+npm run precheck
 ```
 
-**Note:** The free Groq tier has rate limits (8000 tokens/min). If you hit rate limits, wait a minute and try again, or run fewer tests at a time.
+### Precheck Output
+
+The precheck verifies your API key, model availability, and configuration:
+
+```
+╔═══════════════════════════════════════════╗
+║   Module 2: AI TDD Precheck Utility       ║
+╚═══════════════════════════════════════════╝
+
+1. Checking GROQ_API_KEY...
+✓ GROQ_API_KEY is set (from .env file) (gsk_xxxx...)
+
+2. Testing API connection...
+✓ Connected to Groq API (11 models available)
+
+3. Checking model availability...
+✓ Target model available: openai/gpt-oss-20b
+✓ Grading model available: openai/gpt-oss-120b
+
+4. Testing rate limits with sample request...
+✓ Model responded: "hello"
+
+5. Checking promptfoo configuration...
+✓ promptfooconfig.yaml exists
+✓ Concurrency set to 1 (good for free tier rate limits)
+✓ system-prompt.txt exists
+
+✓ All checks passed! Ready to start Module 2.
+```
+
+If all checks pass, you're ready to run tests:
+
+```bash
+# Run tests
+npm test
+
+# View results in web UI
+npm run view
+```
+
+**Note:** The free Groq tier has rate limits (8000 tokens/min). The config uses `maxConcurrency: 1` to avoid hitting limits. If you still get rate limit errors, wait a minute and try again.
 
 ---
 

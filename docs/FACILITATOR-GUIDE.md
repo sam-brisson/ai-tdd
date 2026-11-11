@@ -90,6 +90,7 @@ By the end, participants will:
 
 - [ ] Clone starter repo to fresh directory for live demo
 - [ ] Open terminal windows: one for demo, one for backup
+- [ ] **Run Module 2 precheck:** `cd modules/02-ai-tdd && npm run precheck`
 - [ ] Test `promptfoo eval` runs successfully
 - [ ] Have example system prompts ready to paste
 
@@ -449,6 +450,53 @@ npm test
 > Now let's do the same thing for AI features with promptfoo.
 >
 > Same workflow: Spec → Test → RED → GREEN"
+
+#### Precheck: Verify API Setup (5 min)
+
+**IMPORTANT:** Before starting Module 2, run the precheck utility to verify the API is working:
+
+```bash
+cd modules/02-ai-tdd
+npm run precheck
+```
+
+**Expected output:**
+```
+╔═══════════════════════════════════════════╗
+║   Module 2: AI TDD Precheck Utility       ║
+╚═══════════════════════════════════════════╝
+
+1. Checking GROQ_API_KEY...
+✓ GROQ_API_KEY is set (from .env file) (gsk_xxxx...)
+
+2. Testing API connection...
+✓ Connected to Groq API (11 models available)
+
+3. Checking model availability...
+✓ Target model available: openai/gpt-oss-20b
+✓ Grading model available: openai/gpt-oss-120b
+
+4. Testing rate limits with sample request...
+✓ Model responded: "hello"
+
+5. Checking promptfoo configuration...
+✓ promptfooconfig.yaml exists
+✓ Concurrency set to 1 (good for free tier rate limits)
+✓ system-prompt.txt exists
+
+✓ All checks passed! Ready to start Module 2.
+```
+
+**If precheck fails:**
+
+| Issue | Solution |
+|-------|----------|
+| `GROQ_API_KEY not set` | Copy `.env.example` to `.env` and add your key |
+| `API key invalid` | Get a new key at https://console.groq.com |
+| `Model not found` | Models may have changed - check available models in precheck output |
+| `Rate limit hit` | Normal on free tier - tests will retry automatically |
+
+**Note:** The precheck is designed to catch common issues before participants get stuck. Run it yourself before the workshop and have participants run it at the start of Phase 2.
 
 #### Activities
 
@@ -1018,8 +1066,10 @@ Based on the [OpenSpec workflow](https://openspec.dev/docs/quickstart), adapted 
 
 | Issue | Solution |
 |-------|----------|
+| **Module 2 setup issues** | Run `npm run precheck` first - it catches most problems |
 | promptfoo `llm-rubric` JSON parse errors | Use a larger model for grading (e.g., `gpt-oss-120b` instead of `gpt-oss-20b`) |
-| Groq model not found | Check available models with `curl -s https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY"` |
+| Groq model not found | Run precheck to see available models, or `curl -s https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY"` |
+| Rate limit errors (429) | Normal on free tier - config has `maxConcurrency: 1` to help. Wait and retry. |
 | `promptfoo view` not working | It's a separate command, not `--view` flag. Run `promptfoo eval` first, then `promptfoo view` |
 | Playwright tests break after UI changes | Check `data-testid` attributes and click handlers - small changes can break selectors |
 | Clipboard error on `npm run dev` | Already fixed with `--no-clipboard` flag |

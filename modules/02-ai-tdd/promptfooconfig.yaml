@@ -17,6 +17,10 @@
 
 description: "Thanksgiving Drink Pairing Tests"
 
+# Reduce concurrency to avoid rate limits on free tier
+evaluateOptions:
+  maxConcurrency: 1
+
 prompts:
   - file://system-prompt.txt
 
