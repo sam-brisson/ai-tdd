@@ -70,7 +70,10 @@ By the end, participants will:
 ### 1 Week Before
 
 - [ ] Send setup instructions to participants
-- [ ] Confirm all participants have Groq API keys
+- [ ] **API Key Strategy** (choose one):
+  - **Option A: Participants get their own** - Include signup link in invite email
+  - **Option B: Shared workshop key** - Create temporary key, share in-room only, revoke after
+  - **Option C: Org-provided** - Use company's existing OpenAI/Anthropic keys
 - [ ] Test the starter repo on multiple OS (Mac, Windows, Linux)
 - [ ] Prepare example chatbot scenario (customer support recommended)
 - [ ] Set up screen sharing for terminal demos
@@ -81,6 +84,7 @@ By the end, participants will:
 - [ ] Test internet connectivity in workshop room
 - [ ] Prepare backup: pre-recorded terminal output screenshots
 - [ ] Print quick reference cards (YAML syntax, common commands)
+- [ ] **If using shared key**: Generate temporary Groq API key for workshop
 
 ### 1 Hour Before
 
@@ -88,6 +92,58 @@ By the end, participants will:
 - [ ] Open terminal windows: one for demo, one for backup
 - [ ] Test `promptfoo eval` runs successfully
 - [ ] Have example system prompts ready to paste
+
+---
+
+## API Key Setup
+
+### Option A: Participants Get Their Own Key (Recommended)
+
+Include in pre-workshop email:
+> **Before the workshop, please:**
+> 1. Go to https://console.groq.com/keys
+> 2. Create a free account (no credit card required)
+> 3. Generate an API key
+> 4. Save it somewhere safe - you'll need it during the workshop
+
+**Pros:** No key sharing, participants keep access after
+**Cons:** Requires 5 min setup per person
+
+### Option B: Shared Workshop Key
+
+1. Create a temporary key at https://console.groq.com/keys
+2. Share verbally or on a slide during Phase 0 (NOT in repo/chat)
+3. **Revoke immediately after workshop**
+
+**Facilitator script:**
+> "I'm sharing a temporary API key for today's workshop.
+> Please don't share this outside this room.
+> It will be revoked at the end of the session."
+
+```bash
+# Have participants run:
+export GROQ_API_KEY=<your-temporary-key>
+```
+
+**Pros:** Fast, no participant setup
+**Cons:** Must remember to revoke, key visible during workshop
+
+### Option C: Use Existing Org Keys
+
+If your organization already has OpenAI, Anthropic, or other LLM keys:
+
+1. Update `promptfooconfig.yaml` provider to match:
+   ```yaml
+   providers:
+     - id: openai:gpt-4o-mini  # or anthropic:claude-3-haiku, etc.
+   ```
+
+2. Have participants export the appropriate key:
+   ```bash
+   export OPENAI_API_KEY=your-org-key
+   # or
+   export ANTHROPIC_API_KEY=your-org-key
+   ```
 
 ---
 
@@ -218,15 +274,23 @@ npm run dev
 | **Menu/Dish Management** | Playwright (deterministic) | Module 1 |
 | **Drink Pairing Suggestions** | promptfoo (AI behavioral) | Module 2 |
 
-**Facilitator tip:** Click "Suggest Pairings" to show the AI feature they'll be testing.
+**Facilitator tips:**
+- Click "Suggest Pairings" to show the AI feature they'll be testing
+- Point out the **"OpenSpec Cheat Sheet"** button in the bottom-right corner - participants can click it anytime to see all `/opsx-*` commands with examples
 
 **2. Run the Existing Tests (10 min)**
 
-**Show the Playwright tests passing:**
+**Show the Playwright tests in UI mode:**
 ```bash
 cd modules/01-deterministic-tdd
-npm test
+npx playwright test --ui
 ```
+
+This opens the interactive Playwright Test UI where participants can:
+- See all tests in a sidebar
+- Watch tests run in a mini-browser
+- Click to re-run individual tests
+- See screenshots and traces
 
 **Point out:**
 > "10 tests, all GREEN. This is our baseline.
@@ -264,19 +328,31 @@ Open side-by-side:
 
 **4. Review the OpenSpec Workflow (10 min)**
 
-**Show the flow:**
+**Show the full flow:**
 ```
-1. SPEC IT   → Add requirement to tasks.md
-2. TEST IT   → Derive test from the spec
-3. RED       → Run test, watch it fail
-4. GREEN     → Implement the fix
-5. REFACTOR  → Clean up if needed
+1. PROPOSE   → Why does this need to exist? (proposal.md)
+2. DESIGN    → How will we build it? (design.md)
+3. TASKS     → What are the acceptance criteria? (tasks.md)
+4. DERIVE    → Turn criteria into tests
+5. RED       → Run tests, watch them fail
+6. GREEN     → Implement to make tests pass
+7. REFACTOR  → Clean up if needed
 ```
+
+**Explain each artifact:**
+- **proposal.md**: The WHY - problem statement, who benefits
+- **design.md**: The HOW - technical approach, trade-offs, test strategy
+- **tasks.md**: The WHAT - acceptance criteria that become test cases
 
 **Key point:**
 > "The spec comes FIRST. You don't write tests from thin air.
 > You don't write code until the test exists.
 > Everything traces back to a documented requirement."
+
+**When to use each step:**
+- **Simple bug fix**: proposal → tasks → derive (skip design)
+- **New feature**: proposal → design → tasks → derive
+- **AI feature**: ALWAYS include design (prompt strategy matters)
 
 ---
 
@@ -531,7 +607,7 @@ Test now passes!
 **Facilitator Tips:**
 - Encourage small changes between test runs
 - Remind teams: tests are the spec, not their intuition
-- If stuck, use `--view` to see LLM's actual responses
+- If stuck, use `promptfoo view` to see LLM's actual responses in a web UI
 
 **3. Reach GREEN (10 min)**
 
@@ -789,7 +865,7 @@ Print and distribute to participants:
 ├─────────────────────────────────────────────────┤
 │                                                 │
 │  Run tests:     promptfoo eval                  │
-│  With web UI:   promptfoo eval --view           │
+│  View results:  promptfoo view                  │
 │  No cache:      promptfoo eval --no-cache       │
 │  Filter:        promptfoo eval --filter "name"  │
 │                                                 │
@@ -825,48 +901,138 @@ Print and distribute to participants:
 
 ## Resources
 
-- [OpenSpec Workflow](../openspec/README.md) - How specs become tests
+### OpenSpec
+- [OpenSpec Quickstart](https://openspec.dev/docs/quickstart) - Official 5-phase workflow
+- [OpenSpec Workflow](../openspec/README.md) - How specs become tests (local)
 - [OpenSpec Example: Drink Pairing](../openspec/changes/drink-pairing-feature/) - AI feature spec
 - [OpenSpec Example: Guest Management](../openspec/changes/guest-management-feature/) - Deterministic spec
+- [OpenSpec Example: Data Persistence](../openspec/changes/data-persistence/) - Simple bug fix spec
+- [OpenSpec Example: Delete Guest](../openspec/changes/delete-guest/) - Deterministic feature spec
+
+### Testing Tools
 - [promptfoo Documentation](https://www.promptfoo.dev/docs/)
+- [Playwright Documentation](https://playwright.dev/docs/intro)
 - [Groq API Console](https://console.groq.com) - Free API keys
+
+### Workshop Materials
 - [Workshop Participant Workbook](./PARTICIPANT-WORKBOOK.md)
 - [Demo Script](./DEMO-SCRIPT.md)
+
+### In-App Help
+> **Tip:** The Thanksgiving Dinner Planner app includes an **OpenSpec Cheat Sheet** button in the bottom-right corner. Click it anytime to see all `/opsx-*` commands with examples!
 
 ---
 
 ## Quick Reference: OpenSpec + TDD Flow
 
+Based on the [OpenSpec workflow](https://openspec.dev/docs/quickstart), adapted for TDD:
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                                                                         │
-│  1. CREATE OPENSPEC FOLDER                                              │
-│     mkdir -p openspec/changes/my-chatbot                                │
+│  0. EXPLORE (/opsx-explore) [Optional]                                  │
+│     - Investigate the codebase before committing to a plan              │
+│     - Think through options and trade-offs                              │
+│     - "Help me explore how [feature] should work"                       │
 │                                                                         │
-│  2. WRITE PROPOSAL.MD (Why)                                             │
-│     - Problem statement                                                 │
-│     - Solution overview                                                 │
-│     - Success criteria                                                  │
+│  1. PROPOSE (/opsx-propose feature-name)                                │
+│     - Create openspec/changes/feature-name/                             │
+│     - Write proposal.md: WHY does this need to exist?                   │
+│     - Create manifest.json with status: "proposed"                      │
 │                                                                         │
-│  3. WRITE TASKS.MD (What)                                               │
-│     - Acceptance criteria with llm-rubric assertions                    │
-│     - Happy paths, guardrails, tone                                     │
+│  2. DESIGN (/opsx-design feature-name) [Optional for simple features]   │
+│     - Write design.md: HOW will we build it?                            │
+│     - Document technical approach and trade-offs                        │
+│     - Define test strategy (happy path, edge cases, guardrails)         │
 │                                                                         │
-│  4. DERIVE TESTS (RED)                                                  │
-│     - Copy rubrics from tasks.md → promptfooconfig.yaml                 │
-│     - Run: promptfoo eval → See FAIL                                    │
+│  3. TASKS (/opsx-tasks feature-name)                                    │
+│     - Write tasks.md: WHAT are the acceptance criteria?                 │
+│     - Each criterion includes its test case                             │
+│     - Deterministic → Playwright assertions                             │
+│     - AI features → llm-rubric assertions                               │
 │                                                                         │
-│  5. IMPLEMENT (GREEN)                                                   │
-│     - Write system-prompt.txt                                           │
-│     - Run: promptfoo eval → See PASS                                    │
+│  4. DERIVE (/opsx-derive feature-name) → RED                            │
+│     - Copy tests from tasks.md → test files                             │
+│     - Run tests → See FAIL (proves tests work)                          │
 │                                                                         │
-│  6. REFINE (REFACTOR)                                                   │
+│  5. IMPLEMENT (/opsx-implement feature-name) → GREEN                    │
+│     - Write code/prompts to make tests pass                             │
+│     - Run tests → See PASS                                              │
+│     - (This is "Apply" in standard OpenSpec)                            │
+│                                                                         │
+│  6. REFINE → REFACTOR                                                   │
 │     - Add edge cases to tasks.md                                        │
 │     - Derive new tests                                                  │
 │     - Confirm no regressions                                            │
 │                                                                         │
+│  7. ARCHIVE (/opsx-archive feature-name)                                │
+│     - Move completed change to openspec/archive/                        │
+│     - Clear /changes/ for the next iteration                            │
+│                                                                         │
+│  8. STATUS (/opsx-status)                                               │
+│     - Check progress across all changes                                 │
+│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+### OpenSpec Slash Commands
+
+| Command | Purpose | OpenSpec Phase |
+|---------|---------|----------------|
+| `/opsx-explore` | Investigate before proposing | Explore |
+| `/opsx-propose <name>` | Create new change with proposal.md | Propose |
+| `/opsx-design <name>` | Add design.md with technical approach | Propose |
+| `/opsx-tasks <name>` | Define acceptance criteria and test cases | Propose |
+| `/opsx-derive <name>` | Copy tests from tasks.md to test files | (TDD addition) |
+| `/opsx-implement <name>` | Implement feature to make tests pass | Apply |
+| `/opsx-archive <name>` | Move completed change to archive | Archive |
+| `/opsx-status` | View status of all changes | (Utility) |
+
+### Mapping to Standard OpenSpec
+
+| Standard OpenSpec | Our TDD Workflow | Notes |
+|-------------------|------------------|-------|
+| Explore | `/opsx-explore` | Same - investigate first |
+| Propose | `/opsx-propose` + `/opsx-design` + `/opsx-tasks` | We split into explicit steps |
+| Review | (Human reviews between steps) | Implicit in workshop flow |
+| Apply | `/opsx-implement` | Renamed for TDD clarity |
+| Archive | `/opsx-archive` | Same - clean up when done |
+
+---
+
+## Tips from Experience
+
+### Things That Work Well
+
+1. **Start with a real bug** - Let participants discover issues (like "refresh clears data") before introducing OpenSpec. The "aha moment" is stronger when they see the problem first.
+
+2. **Show regression protection** - When implementing delete-guest, we accidentally broke the dietary restriction test. This perfectly demonstrates why TDD matters!
+
+3. **Use the in-app cheat sheet** - Participants forget command syntax. The "OpenSpec Cheat Sheet" button in the app gives them instant reference without leaving context.
+
+4. **Plain text proposals work** - When a participant says "I want to delete a guest if I added in error!", capture that verbatim in proposal.md. It's more authentic than formal requirements.
+
+5. **Skip design for simple fixes** - Data persistence and delete-guest don't need elaborate design docs. Save `/opsx-design` for AI features and complex changes.
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| promptfoo `llm-rubric` JSON parse errors | Use a larger model for grading (e.g., `gpt-oss-120b` instead of `gpt-oss-20b`) |
+| Groq model not found | Check available models with `curl -s https://api.groq.com/openai/v1/models -H "Authorization: Bearer $GROQ_API_KEY"` |
+| `promptfoo view` not working | It's a separate command, not `--view` flag. Run `promptfoo eval` first, then `promptfoo view` |
+| Playwright tests break after UI changes | Check `data-testid` attributes and click handlers - small changes can break selectors |
+| Clipboard error on `npm run dev` | Already fixed with `--no-clipboard` flag |
+
+### When to Use Each OpenSpec Step
+
+| Situation | Steps to Use |
+|-----------|--------------|
+| Simple bug fix | propose → tasks → derive → implement |
+| New deterministic feature | propose → tasks → derive → implement |
+| New AI feature | propose → **design** → tasks → derive → implement |
+| Complex architectural change | **explore** → propose → **design** → tasks → derive → implement |
+| Uncertain about approach | **explore** first, then decide |
 
 ---
 

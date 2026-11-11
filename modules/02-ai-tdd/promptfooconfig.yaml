@@ -13,7 +13,7 @@
 #   3. Add more tests (REFACTOR - expand coverage)
 #
 # Run tests: promptfoo eval
-# View results: promptfoo eval --view
+# View results: promptfoo view
 
 description: "Thanksgiving Drink Pairing Tests"
 
@@ -23,11 +23,11 @@ prompts:
 providers:
   - id: groq:openai/gpt-oss-20b
 
-# Use Groq for grading llm-rubric assertions (instead of OpenAI default)
+# Use Groq for grading llm-rubric assertions (use larger model for better JSON compliance)
 defaultTest:
   options:
     provider:
-      id: groq:openai/gpt-oss-20b
+      id: groq:openai/gpt-oss-120b
   vars:
     prompt: |
       Menu: {{menu}}

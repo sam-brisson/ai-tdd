@@ -207,28 +207,6 @@ Automatic portion recommendations.
 
 ---
 
-## Data Persistence
-
-Saving and restoring planner data across page reloads.
-
-- [x] **Guest data persists after page refresh**
-  ```typescript
-  test('persists guests after page refresh', async ({ page }) => {
-    // Add a guest
-    await page.fill('[data-testid="guest-name-input"]', 'Grandma Rose');
-    await page.click('[data-testid="add-guest-button"]');
-
-    // Refresh the page
-    await page.reload();
-
-    // Guest should still be there
-    await expect(page.locator('[data-testid="guest-list"]'))
-      .toContainText('Grandma Rose');
-  });
-  ```
-
----
-
 ## Implementation Tasks
 
 ### HTML Structure
@@ -245,8 +223,6 @@ Saving and restoring planner data across page reloads.
 - [x] setRestriction() - modal and badge display
 - [x] calculateServing() - serving size logic
 - [x] checkConflicts() - dietary warning logic
-- [x] saveState() - persist to localStorage
-- [x] loadState() - restore from localStorage on page load
 
 ### Styling
 - [x] Clean, readable layout
@@ -258,8 +234,7 @@ Saving and restoring planner data across page reloads.
 
 ## Definition of Done
 
-- [x] All 11 Playwright tests pass
+- [x] All 10 Playwright tests pass
 - [x] All data-testid attributes in place
 - [x] No console errors during operation
 - [x] Manual testing confirms smooth UX
-- [x] Data persists across page refresh

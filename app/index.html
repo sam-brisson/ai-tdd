@@ -225,6 +225,10 @@
 <body>
   <h1>🦃 Thanksgiving Dinner Planner</h1>
 
+  <button id="openspec-cheatsheet-btn" style="position: fixed; bottom: 20px; right: 20px; background: #2563eb; border-radius: 20px; padding: 10px 16px; font-size: 14px; z-index: 100;">
+    📋 OpenSpec Cheat Sheet
+  </button>
+
   <!-- Guest Section -->
   <div class="section">
     <h2>
@@ -315,6 +319,94 @@
     </div>
   </div>
 
+  <!-- OpenSpec Cheat Sheet Modal -->
+  <div class="modal" id="openspec-modal">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+      <h3>📋 OpenSpec + TDD Cheat Sheet</h3>
+
+      <div style="font-size: 14px; line-height: 1.6;">
+        <p style="color: #666; margin-bottom: 15px;">
+          Use these commands in Claude Code to manage your feature workflow:
+        </p>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #2563eb;">/opsx-explore</strong>
+          <div style="color: #666; font-size: 13px;">Investigate before committing to a plan</div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            "Help me explore how deleting a guest should work"
+          </code>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #2563eb;">/opsx-propose &lt;name&gt;</strong>
+          <div style="color: #666; font-size: 13px;">Create a new change with proposal.md (the WHY)</div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            /opsx-propose delete-guest
+          </code>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #2563eb;">/opsx-design &lt;name&gt;</strong>
+          <div style="color: #666; font-size: 13px;">Add design.md with technical approach (the HOW)</div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            /opsx-design delete-guest
+          </code>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #2563eb;">/opsx-tasks &lt;name&gt;</strong>
+          <div style="color: #666; font-size: 13px;">Define acceptance criteria and test cases (the WHAT)</div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            /opsx-tasks delete-guest
+          </code>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #dc2626;">/opsx-derive &lt;name&gt;</strong>
+          <div style="color: #666; font-size: 13px;">Copy tests from tasks.md to test files → <span style="color: #dc2626; font-weight: bold;">RED</span></div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            /opsx-derive delete-guest
+          </code>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #16a34a;">/opsx-implement &lt;name&gt;</strong>
+          <div style="color: #666; font-size: 13px;">Write code to make tests pass → <span style="color: #16a34a; font-weight: bold;">GREEN</span></div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            /opsx-implement delete-guest
+          </code>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #2563eb;">/opsx-archive &lt;name&gt;</strong>
+          <div style="color: #666; font-size: 13px;">Move completed change to archive</div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            /opsx-archive delete-guest
+          </code>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <strong style="color: #2563eb;">/opsx-status</strong>
+          <div style="color: #666; font-size: 13px;">Check progress across all changes</div>
+          <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
+            /opsx-status
+          </code>
+        </div>
+
+        <div style="background: #fef3c7; padding: 12px; border-radius: 8px; border: 1px solid #f59e0b; margin-top: 15px;">
+          <strong>💡 TDD Workflow</strong>
+          <div style="font-size: 13px; margin-top: 6px;">
+            <span style="color: #dc2626;">❌ RED</span> → Write tests first (they fail)<br>
+            <span style="color: #16a34a;">✅ GREEN</span> → Implement to make tests pass<br>
+            <span style="color: #2563eb;">♻️ REFACTOR</span> → Clean up, add edge cases
+          </div>
+        </div>
+      </div>
+
+      <button id="close-openspec-modal" style="margin-top: 15px; background: #64748b;">Close</button>
+    </div>
+  </div>
+
   <!-- Modal for editing guest restrictions -->
   <div class="modal" data-testid="restriction-modal">
     <div class="modal-content">
@@ -346,11 +438,7 @@
           selectedGuest: null
         };
       }
-      return {
-        guests: [],
-        dishes: [],
-        selectedGuest: null
-      };
+      return { guests: [], dishes: [], selectedGuest: null };
     }
 
     function saveState() {
@@ -409,16 +497,32 @@
             ${guest.name}
             ${guest.restriction ? `<span class="restriction-tag">${guest.restriction}</span>` : ''}
           </span>
+          <button data-testid="delete-guest-${guest.name}" class="delete-btn" style="background: #dc3545; padding: 4px 8px; font-size: 12px;">X</button>
         </li>
       `).join('');
 
       guestCount.textContent = state.guests.length;
 
-      // Add click handlers
+      // Add click handlers for editing restrictions (on the list item itself)
       guestList.querySelectorAll('.list-item').forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', (e) => {
+          // Don't open modal if clicking the delete button
+          if (e.target.classList.contains('delete-btn')) return;
           const guestName = item.dataset.guest;
           openRestrictionModal(guestName);
+        });
+      });
+
+      // Add click handlers for delete buttons
+      guestList.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const guestName = btn.parentElement.dataset.guest;
+          if (confirm(`Are you sure you want to delete ${guestName}?`)) {
+            state.guests = state.guests.filter(g => g.name !== guestName);
+            renderGuests();
+            saveState();
+          }
         });
       });
 
@@ -566,6 +670,25 @@
     // Initialize: render saved data on page load
     renderGuests();
     renderDishes();
+
+    // OpenSpec Cheat Sheet Modal
+    const openspecBtn = document.getElementById('openspec-cheatsheet-btn');
+    const openspecModal = document.getElementById('openspec-modal');
+    const closeOpenspecBtn = document.getElementById('close-openspec-modal');
+
+    openspecBtn.addEventListener('click', () => {
+      openspecModal.classList.add('active');
+    });
+
+    closeOpenspecBtn.addEventListener('click', () => {
+      openspecModal.classList.remove('active');
+    });
+
+    openspecModal.addEventListener('click', (e) => {
+      if (e.target === openspecModal) {
+        openspecModal.classList.remove('active');
+      }
+    });
   </script>
 </body>
 </html>

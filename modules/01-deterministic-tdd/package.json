@@ -6,7 +6,7 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
-    "dev": "npx serve ../../app -p 3000"
+    "dev": "npx serve ../../app -p 3000 --no-clipboard"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",

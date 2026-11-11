@@ -190,7 +190,8 @@ test.describe('Thanksgiving Dinner Planner - Deterministic Features', () => {
   });
 
   // ============================================
-  // DATA PERSISTENCE (Workshop Exercise)
+  // DATA PERSISTENCE
+  // OpenSpec: data-persistence/tasks.md
   // ============================================
 
   // OpenSpec: "Guest data persists after page refresh"
@@ -203,7 +204,98 @@ test.describe('Thanksgiving Dinner Planner - Deterministic Features', () => {
     await page.reload();
 
     // Guest should still be there
-    await expect(page.locator('[data-testid="guest-list"]')).toContainText('Grandma Rose');
+    await expect(page.locator('[data-testid="guest-list"]'))
+      .toContainText('Grandma Rose');
+  });
+
+  // OpenSpec: "Dish data persists after page refresh"
+  test('persists dishes after page refresh', async ({ page }) => {
+    // Add a dish
+    await page.fill('[data-testid="dish-name-input"]', 'Pumpkin Pie');
+    await page.fill('[data-testid="dish-contributor-input"]', 'Mom');
+    await page.selectOption('[data-testid="dish-type-select"]', 'dessert');
+    await page.click('[data-testid="add-dish-button"]');
+
+    // Refresh the page
+    await page.reload();
+
+    // Dish should still be there
+    await expect(page.locator('[data-testid="desserts-list"]'))
+      .toContainText('Pumpkin Pie');
+  });
+
+  // ============================================
+  // DELETE GUEST
+  // OpenSpec: delete-guest/tasks.md
+  // ============================================
+
+  // OpenSpec: "Clicking delete and confirming removes the guest"
+  test('can delete a guest after confirmation', async ({ page }) => {
+    // Add a guest
+    await page.fill('[data-testid="guest-name-input"]', 'Uncle Bob');
+    await page.click('[data-testid="add-guest-button"]');
+
+    // Set up dialog handler BEFORE clicking
+    page.on('dialog', dialog => dialog.accept());
+
+    // Click delete button
+    await page.click('[data-testid="delete-guest-Uncle Bob"]');
+
+    // Guest should be gone
+    await expect(page.locator('[data-testid="guest-list"]'))
+      .not.toContainText('Uncle Bob');
+  });
+
+  // OpenSpec: "Guest count updates after deletion"
+  test('guest count decreases after deletion', async ({ page }) => {
+    // Add two guests
+    await page.fill('[data-testid="guest-name-input"]', 'Mom');
+    await page.click('[data-testid="add-guest-button"]');
+    await page.fill('[data-testid="guest-name-input"]', 'Dad');
+    await page.click('[data-testid="add-guest-button"]');
+
+    // Verify count is 2
+    await expect(page.locator('[data-testid="guest-count"]')).toContainText('2');
+
+    // Delete one guest (accept dialog)
+    page.on('dialog', dialog => dialog.accept());
+    await page.click('[data-testid="delete-guest-Mom"]');
+
+    // Count should be 1
+    await expect(page.locator('[data-testid="guest-count"]')).toContainText('1');
+  });
+
+  // OpenSpec: "Canceling the confirmation keeps the guest"
+  test('canceling delete keeps the guest', async ({ page }) => {
+    // Add a guest
+    await page.fill('[data-testid="guest-name-input"]', 'Grandma');
+    await page.click('[data-testid="add-guest-button"]');
+
+    // Click delete but cancel
+    page.on('dialog', dialog => dialog.dismiss());
+    await page.click('[data-testid="delete-guest-Grandma"]');
+
+    // Guest should still be there
+    await expect(page.locator('[data-testid="guest-list"]'))
+      .toContainText('Grandma');
+  });
+
+  // OpenSpec: "Deletion persists after page refresh"
+  test('deleted guest stays deleted after refresh', async ({ page }) => {
+    // Add a guest
+    await page.fill('[data-testid="guest-name-input"]', 'Cousin Emma');
+    await page.click('[data-testid="add-guest-button"]');
+
+    // Delete with confirmation
+    page.on('dialog', dialog => dialog.accept());
+    await page.click('[data-testid="delete-guest-Cousin Emma"]');
+
+    // Refresh
+    await page.reload();
+
+    // Guest should still be gone
+    await expect(page.locator('[data-testid="guest-list"]'))
+      .not.toContainText('Cousin Emma');
   });
 
 });

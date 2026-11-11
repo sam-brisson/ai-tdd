@@ -50,4 +50,7 @@ Write a proposal.md file with this structure:
 
 After creating the proposal, tell the participant:
 > "Your proposal is ready at `openspec/changes/$ARGUMENTS/proposal.md`
-> Next step: Run `/opsx-tasks` to define acceptance criteria."
+>
+> Next steps:
+> - For complex/AI features: Run `/opsx-design $ARGUMENTS` to document the technical approach
+> - For simple features: Run `/opsx-tasks $ARGUMENTS` to define acceptance criteria"
