@@ -195,7 +195,7 @@ promptfoo eval
 
 ### Phase 1: Discover (45 min)
 
-**Goal:** Teams explore the app and understand the two testing approaches.
+**Goal:** Teams explore the app, run existing tests, and identify bugs/missing features.
 
 **Format:** Whole group demo, then exploration in pairs
 
@@ -220,27 +220,191 @@ npm run dev
 
 **Facilitator tip:** Click "Suggest Pairings" to show the AI feature they'll be testing.
 
-**2. Review the Drink Pairing Example (20 min)**
+**2. Run the Existing Tests (10 min)**
 
-**Show the existing OpenSpec + test connection:**
+**Show the Playwright tests passing:**
+```bash
+cd modules/01-deterministic-tdd
+npm test
+```
 
+**Point out:**
+> "10 tests, all GREEN. This is our baseline.
+> These tests came from the OpenSpec at `openspec/changes/guest-management-feature/tasks.md`."
+
+**Show the OpenSpec → Test connection:**
 Open side-by-side:
-- `openspec/changes/drink-pairing-feature/tasks.md` (acceptance criteria)
-- `modules/02-ai-tdd/promptfooconfig.yaml` (derived tests)
+- `openspec/changes/guest-management-feature/tasks.md` (acceptance criteria)
+- `modules/01-deterministic-tdd/tests/dinner-form.spec.ts` (derived tests)
 
-**Walk through the categories:**
+> "See the comment `// OpenSpec: 'Can add a guest...'`?
+> Every test traces back to a requirement in the spec."
 
-| Category | Example Requirement | Example Test |
-|----------|--------------------|--------------|
-| **Happy Path** | "Suggests wine for turkey" | `llm-rubric: "Suggests a red wine..."` |
-| **Guardrails** | "Stays on topic" | `llm-rubric: "Redirects off-topic..."` |
-| **Tone** | "Uses accessible language" | `llm-rubric: "No pretentious wine terminology"` |
+**3. Find Bugs! (15 min)**
+
+**Challenge the teams:**
+> "Play with the app. Try to break it. Find something that DOESN'T work."
+
+**Common discoveries:**
+- Data lost on refresh (no persistence)
+- Can't delete a dish
+- Can't edit a guest name
+- "Who's bringing" not linked to guest list
+
+**Capture findings on whiteboard:**
+
+| Bug/Missing Feature | Type |
+|---------------------|------|
+| Data lost on refresh | Bug |
+| Can't delete dishes | Missing feature |
 
 **Key insight:**
-> "See how each test traces back to an acceptance criterion?
-> The spec tells you WHAT to test. promptfoo validates it works."
+> "You just found real issues by exploring.
+> Now we'll use OpenSpec to spec the fix BEFORE writing code."
 
-**3. Run the Tests (15 min)**
+**4. Review the OpenSpec Workflow (10 min)**
+
+**Show the flow:**
+```
+1. SPEC IT   → Add requirement to tasks.md
+2. TEST IT   → Derive test from the spec
+3. RED       → Run test, watch it fail
+4. GREEN     → Implement the fix
+5. REFACTOR  → Clean up if needed
+```
+
+**Key point:**
+> "The spec comes FIRST. You don't write tests from thin air.
+> You don't write code until the test exists.
+> Everything traces back to a documented requirement."
+
+---
+
+### Phase 1.5: Spec Your Fix (30 min)
+
+**Goal:** Use OpenSpec to document the bug fix BEFORE writing code.
+
+This is the core TDD workflow: spec → test → implement.
+
+#### Demo: Fix the Persistence Bug
+
+**Walk through as a group:**
+
+**Step 1: Add the requirement to tasks.md (5 min)**
+
+Open `openspec/changes/guest-management-feature/tasks.md` and add:
+
+```markdown
+## Data Persistence
+
+- [ ] **Guest data persists after page refresh**
+  ```typescript
+  test('persists guests after page refresh', async ({ page }) => {
+    await page.fill('[data-testid="guest-name-input"]', 'Grandma Rose');
+    await page.click('[data-testid="add-guest-button"]');
+
+    await page.reload();
+
+    await expect(page.locator('[data-testid="guest-list"]'))
+      .toContainText('Grandma Rose');
+  });
+  ```
+```
+
+**Key point:**
+> "The spec now documents WHAT we need. The test code shows HOW we'll verify it."
+
+**Step 2: Derive the test (5 min)**
+
+Copy the test from tasks.md into `dinner-form.spec.ts`:
+
+```typescript
+// OpenSpec: "Guest data persists after page refresh"
+test('persists guests after page refresh', async ({ page }) => {
+  // ... (paste the test)
+});
+```
+
+**Step 3: Run the test - see RED (5 min)**
+
+```bash
+npm test
+```
+
+> "11 tests: 10 pass, 1 fails. That failing test PROVES the bug exists."
+
+**Step 4: Implement the fix (10 min)**
+
+Add localStorage to `app/index.html`:
+- `saveState()` - save to localStorage on changes
+- `loadState()` - restore on page load
+
+**Step 5: Run the test - see GREEN (5 min)**
+
+```bash
+npm test
+```
+
+> "11 tests: all pass! The bug is fixed AND documented."
+
+#### Teams Practice
+
+**Each team picks ONE bug from their discovery list and:**
+
+1. Adds the requirement to `tasks.md`
+2. Derives the test
+3. Runs to see RED
+4. Implements the fix
+5. Runs to see GREEN
+
+**Role Guidance:**
+- **Product:** Write the acceptance criterion (what should happen?)
+- **Engineering:** Write the test code (how do we verify it?)
+- **Design:** Validate the fix makes sense for users
+
+---
+
+### Phase 2: AI Testing with promptfoo (45 min)
+
+**Goal:** Apply the same OpenSpec workflow to AI behavior testing.
+
+**Key transition:**
+> "You just did TDD for deterministic features with Playwright.
+> Now let's do the same thing for AI features with promptfoo.
+>
+> Same workflow: Spec → Test → RED → GREEN"
+
+#### Activities
+
+**1. Review the Drink Pairing Spec (10 min)**
+
+**Show the existing OpenSpec:**
+
+Open side-by-side:
+- `openspec/changes/drink-pairing-feature/tasks.md`
+- `modules/02-ai-tdd/promptfooconfig.yaml`
+
+**Walk through one example:**
+
+```markdown
+# In tasks.md:
+- [x] **Suggests wine for turkey**
+  ```yaml
+  - description: "Suggests wine for traditional turkey dinner"
+    vars:
+      menu: "Roasted Turkey, Mashed Potatoes, Cranberry Sauce"
+    assert:
+      - type: llm-rubric
+        value: "Suggests at least one wine variety that pairs well with turkey"
+  ```
+```
+
+**Key difference from Playwright:**
+> "With Playwright, we assert exact values: `toContainText('Grandma Rose')`
+> With promptfoo, we use `llm-rubric` to judge BEHAVIOR, not exact words.
+> The AI might say 'Pinot Noir' or 'a nice red wine' - both could be correct."
+
+**2. Run the AI Tests (10 min)**
 
 ```bash
 cd modules/02-ai-tdd
@@ -248,193 +412,63 @@ export GROQ_API_KEY=your_key_here
 promptfoo eval
 ```
 
-**Show the output.** If system-prompt.txt is good, tests pass. If empty, they fail (RED state).
+**Show the output:** Tests should pass because `system-prompt.txt` is already written.
 
-**Teams experiment:** Delete the system-prompt.txt content, run tests, see failures.
+**Experiment - see RED:**
+> "Let's empty the system prompt and see what happens."
 
----
-
-### Phase 1.5: Spec Your Change (30 min) - NEW
-
-**Goal:** Extend the drink pairing feature with new requirements and tests.
-
-This phase bridges exploration and implementation. Teams add new acceptance criteria to the existing spec and derive tests from them.
-
-#### Why This Phase?
-
-**Demo Script:**
-> "You've seen how the drink pairing tests work.
-> Now you'll add your own requirements.
->
-> Maybe you want the AI to suggest dessert wines?
-> Or handle guests who are pregnant?
-> Or recommend specific pairings for vegan dishes?
->
-> First, you'll add the requirement to tasks.md.
-> Then, you'll derive a test from it."
-
-#### Activities
-
-**1. Review the Existing Spec (5 min)**
-
-Open `openspec/changes/drink-pairing-feature/tasks.md` on screen.
-
-**Point out the structure:**
-> "See how each acceptance criterion has the actual test code right next to it?
-> This is the connection: spec → test.
->
-> Now you'll ADD a new requirement to this spec."
-
-**2. Brainstorm New Requirements (10 min)**
-
-Give teams this prompt:
-
-```
-What ELSE should the drink pairing assistant handle?
-
-HAPPY PATH ideas:
-- Dessert wine pairings?
-- Champagne/sparkling for toasts?
-- Pairings for specific cuisines (Southern, Mexican, etc.)?
-
-GUARDRAIL ideas:
-- Handle questions about underage drinking?
-- Not recommend drinks that interact with medications?
-- Handle pregnancy/breastfeeding considerations?
-
-TONE ideas:
-- Be extra reassuring for budget-conscious hosts?
-- Handle cultural/religious considerations sensitively?
+```bash
+echo "" > system-prompt.txt
+promptfoo eval
 ```
 
-**Each team picks ONE new requirement to add.**
+> "Tests fail! The AI doesn't know how to behave without instructions."
 
-**3. Add to tasks.md (10 min)**
+**Restore the prompt:**
+```bash
+git checkout system-prompt.txt
+```
 
-Teams add their requirement to the existing `tasks.md`:
+**3. Add a New AI Requirement (25 min)**
+
+**Teams add to `tasks.md`:**
 
 ```markdown
-# Add under appropriate section:
+## Follow-up Questions (Workshop Addition)
 
-- [ ] **[Your new requirement]**
+- [ ] **AI suggests follow-up questions**
   ```yaml
-  - description: "[Test description]"
+  - description: "Suggests clickable follow-up questions"
     vars:
-      menu: "[Example menu]"
+      menu: "Turkey, Mashed Potatoes, Pumpkin Pie"
     assert:
       - type: llm-rubric
-        value: "[What makes a good response]"
+        value: "Includes 2-3 suggested follow-up questions (e.g., about budget, alternatives, or specific dishes)"
   ```
 ```
 
-**Example:**
-```markdown
-- [ ] **Suggests dessert wines for pie**
-  ```yaml
-  - description: "Suggests dessert wine for pumpkin pie"
-    vars:
-      menu: "Pumpkin Pie, Apple Crisp"
-    assert:
-      - type: llm-rubric
-        value: "Suggests a dessert wine (like late harvest Riesling or Moscato) for the sweet dishes"
-  ```
-```
+**Derive the test:**
+Copy the YAML into `promptfooconfig.yaml` and run:
 
-**Key coaching:**
-> "Notice you're writing the spec FIRST, before the test exists.
-> The test will be derived from this requirement."
-
-**4. Derive the Test (5 min)**
-
-Teams copy their new requirement into `promptfooconfig.yaml`:
-- Copy the YAML from tasks.md
-- Paste into the appropriate section of promptfooconfig.yaml
-- Run `promptfoo eval` to see it fail (RED)
-
-**Role Guidance:**
-- **Product:** Define what the feature MUST do (happy paths)
-- **Design:** Define HOW it should feel (tone)
-- **Engineering:** Define what it must NOT do (guardrails)
-
----
-
-### Phase 2: Specify (RED) (45 min)
-
-**Goal:** Derive promptfoo tests directly from tasks.md acceptance criteria.
-
-**Key transition:**
-> "You've written your specs. Now we DERIVE tests from them.
-> Notice: you're not inventing tests. You're implementing your spec."
-
-#### Activities
-
-**1. From Spec to Test (10 min)**
-
-**Show the connection:**
-
-Open `openspec/changes/my-chatbot/tasks.md` side-by-side with `promptfooconfig.yaml`.
-
-> "Your tasks.md says: 'Suggests wine for turkey'
-> with rubric: 'Suggests a Pinot Noir or similar light red wine'
->
-> That becomes this test:"
-
-**Live Demo:** Open `promptfooconfig.yaml` and walk through one test:
-
-```yaml
-- description: "Helps with returns"
-  vars:
-    query: "I want to return my order"
-  assert:
-    - type: llm-rubric
-      value: "Offers to help with the return process and asks for order details"
-```
-
-**Explain each part:**
-- `description`: Human-readable name (shows up in test output)
-- `vars.query`: What the user says
-- `assert.type: llm-rubric`: Judge behavior, not exact wording
-- `assert.value`: Describe GOOD behavior in plain English
-
-**2. Derive Your First Test (15 min)**
-
-**Exercise:** Teams copy their first acceptance criterion from tasks.md into promptfooconfig.yaml.
-
-**Facilitator circulates and helps with:**
-- YAML indentation (2 spaces, not tabs!)
-- Making rubrics specific enough (not just "response is good")
-- Avoiding exact string matching (use `llm-rubric`, not `contains`)
-
-**Common mistake:**
-```yaml
-# ❌ Too vague
-value: "Response is helpful"
-
-# ✅ Specific
-value: "Offers to help with the return process and asks for order details"
-```
-
-**3. Run Tests and Embrace RED (20 min)**
-
-**Each team runs:**
 ```bash
 promptfoo eval
 ```
 
-**Expected result:** All tests FAIL (system-prompt.txt still empty)
+**Expected:** Test FAILS (RED) - system prompt doesn't mention follow-ups.
 
-**Facilitator emphasizes:**
-> "RED is not bad! RED is your specification.
-> These failures tell you exactly what you need to build."
-
-**Optional:** Run with `--view` flag to open web UI:
-```bash
-promptfoo eval --view
+**Fix the prompt:**
+Add to `system-prompt.txt`:
+```
+After your suggestions, offer 2-3 follow-up questions like:
+- "What about a budget-friendly option?"
+- "Any white wine alternatives?"
 ```
 
-Show teams how to click on failing tests to see:
-- What the LLM actually responded
-- Why the rubric grader failed it
+**Run again:** Test PASSES (GREEN)
+
+**Key insight:**
+> "Same cycle: Spec → Test → RED → GREEN.
+> Works for deterministic features AND AI behavior."
 
 ---
 

@@ -189,4 +189,21 @@ test.describe('Thanksgiving Dinner Planner - Deterministic Features', () => {
       .toContainText('6 lbs');
   });
 
+  // ============================================
+  // DATA PERSISTENCE (Workshop Exercise)
+  // ============================================
+
+  // OpenSpec: "Guest data persists after page refresh"
+  test('persists guests after page refresh', async ({ page }) => {
+    // Add a guest
+    await page.fill('[data-testid="guest-name-input"]', 'Grandma Rose');
+    await page.click('[data-testid="add-guest-button"]');
+
+    // Refresh the page
+    await page.reload();
+
+    // Guest should still be there
+    await expect(page.locator('[data-testid="guest-list"]')).toContainText('Grandma Rose');
+  });
+
 });
