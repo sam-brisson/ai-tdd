@@ -114,6 +114,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Get system prompt endpoint
+app.get('/api/system-prompt', (req, res) => {
+  const prompt = getSystemPrompt();
+  res.json({ prompt });
+});
+
 // Try to start server, fall back to next port if in use
 function startServer(port) {
   const server = app.listen(port)

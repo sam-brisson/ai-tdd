@@ -252,6 +252,10 @@
 <body>
   <h1>🦃 Thanksgiving Dinner Planner</h1>
 
+  <button id="system-prompt-btn" style="position: fixed; bottom: 70px; right: 20px; background: #8b4513; border-radius: 20px; padding: 10px 16px; font-size: 14px; z-index: 100;">
+    🤖 View System Prompt
+  </button>
+
   <button id="openspec-cheatsheet-btn" style="position: fixed; bottom: 20px; right: 20px; background: #2563eb; border-radius: 20px; padding: 10px 16px; font-size: 14px; z-index: 100;">
     📋 OpenSpec Cheat Sheet
   </button>
@@ -431,6 +435,21 @@
       </div>
 
       <button id="close-openspec-modal" style="margin-top: 15px; background: #64748b;">Close</button>
+    </div>
+  </div>
+
+  <!-- System Prompt Modal -->
+  <div class="modal" id="system-prompt-modal">
+    <div class="modal-content" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+      <h3>🤖 AI System Prompt</h3>
+      <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+        This is the system prompt that guides the AI when generating drink pairing suggestions.
+        <br><em>Edit this file at: <code>modules/02-ai-tdd/system-prompt.txt</code></em>
+      </p>
+      <div id="system-prompt-content" style="background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px; line-height: 1.6; white-space: pre-wrap; max-height: 400px; overflow-y: auto;">
+        Loading...
+      </div>
+      <button id="close-system-prompt-modal" style="margin-top: 15px; background: #64748b;">Close</button>
     </div>
   </div>
 
@@ -782,6 +801,39 @@
     openspecModal.addEventListener('click', (e) => {
       if (e.target === openspecModal) {
         openspecModal.classList.remove('active');
+      }
+    });
+
+    // System Prompt Modal
+    const systemPromptBtn = document.getElementById('system-prompt-btn');
+    const systemPromptModal = document.getElementById('system-prompt-modal');
+    const closeSystemPromptBtn = document.getElementById('close-system-prompt-modal');
+    const systemPromptContent = document.getElementById('system-prompt-content');
+
+    systemPromptBtn.addEventListener('click', async () => {
+      systemPromptModal.classList.add('active');
+      systemPromptContent.textContent = 'Loading...';
+
+      try {
+        const response = await fetch('/api/system-prompt');
+        if (response.ok) {
+          const data = await response.json();
+          systemPromptContent.textContent = data.prompt;
+        } else {
+          systemPromptContent.textContent = 'Error loading system prompt. Make sure the server is running.';
+        }
+      } catch (error) {
+        systemPromptContent.textContent = 'Error: ' + error.message + '\n\nMake sure the server is running with: npm run dev';
+      }
+    });
+
+    closeSystemPromptBtn.addEventListener('click', () => {
+      systemPromptModal.classList.remove('active');
+    });
+
+    systemPromptModal.addEventListener('click', (e) => {
+      if (e.target === systemPromptModal) {
+        systemPromptModal.classList.remove('active');
       }
     });
   </script>
