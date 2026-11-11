@@ -425,28 +425,12 @@
   </div>
 
   <script>
-    // State (load from localStorage if available)
-    const state = loadState();
-
-    function loadState() {
-      const saved = localStorage.getItem('thanksgiving-planner');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          guests: parsed.guests || [],
-          dishes: parsed.dishes || [],
-          selectedGuest: null
-        };
-      }
-      return { guests: [], dishes: [], selectedGuest: null };
-    }
-
-    function saveState() {
-      localStorage.setItem('thanksgiving-planner', JSON.stringify({
-        guests: state.guests,
-        dishes: state.dishes
-      }));
-    }
+    // State
+    const state = {
+      guests: [],
+      dishes: [],
+      selectedGuest: null
+    };
 
     // Serving size recommendations (lbs per person)
     const servingSizes = {
@@ -486,7 +470,6 @@
 
       state.guests.push({ name, restriction: null });
       renderGuests();
-      saveState();
       guestInput.value = '';
     });
 
@@ -497,32 +480,16 @@
             ${guest.name}
             ${guest.restriction ? `<span class="restriction-tag">${guest.restriction}</span>` : ''}
           </span>
-          <button data-testid="delete-guest-${guest.name}" class="delete-btn" style="background: #dc3545; padding: 4px 8px; font-size: 12px;">X</button>
         </li>
       `).join('');
 
       guestCount.textContent = state.guests.length;
 
-      // Add click handlers for editing restrictions (on the list item itself)
+      // Add click handlers
       guestList.querySelectorAll('.list-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-          // Don't open modal if clicking the delete button
-          if (e.target.classList.contains('delete-btn')) return;
+        item.addEventListener('click', () => {
           const guestName = item.dataset.guest;
           openRestrictionModal(guestName);
-        });
-      });
-
-      // Add click handlers for delete buttons
-      guestList.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const guestName = btn.parentElement.dataset.guest;
-          if (confirm(`Are you sure you want to delete ${guestName}?`)) {
-            state.guests = state.guests.filter(g => g.name !== guestName);
-            renderGuests();
-            saveState();
-          }
         });
       });
 
@@ -545,7 +512,6 @@
       }
       modal.classList.remove('active');
       renderGuests();
-      saveState();
     });
 
     cancelRestrictionBtn.addEventListener('click', () => {
@@ -563,7 +529,6 @@
 
       state.dishes.push({ name, contributor, type, containsMeat });
       renderDishes();
-      saveState();
 
       dishInput.value = '';
       contributorInput.value = '';
@@ -666,10 +631,6 @@
       pairingSuggestions.style.display = 'block';
       suggestPairingsBtn.disabled = false;
     });
-
-    // Initialize: render saved data on page load
-    renderGuests();
-    renderDishes();
 
     // OpenSpec Cheat Sheet Modal
     const openspecBtn = document.getElementById('openspec-cheatsheet-btn');
