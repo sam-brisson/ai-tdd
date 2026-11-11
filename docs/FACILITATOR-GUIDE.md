@@ -276,8 +276,10 @@ npm run dev
 | **Drink Pairing Suggestions** | promptfoo (AI behavioral) | Module 2 |
 
 **Facilitator tips:**
-- Click "Suggest Pairings" to show the AI feature they'll be testing
-- Point out the **"OpenSpec Cheat Sheet"** button in the bottom-right corner - participants can click it anytime to see all `/opsx-*` commands with examples
+- Click "Suggest Pairings" to show the AI feature they'll be testing - this calls the real Groq API using the system prompt from `modules/02-ai-tdd/system-prompt.txt`
+- Point out the two buttons in the bottom-right corner:
+  - **"View System Prompt"** - Shows the current AI system prompt (updates live when you edit the file)
+  - **"OpenSpec Cheat Sheet"** - Quick reference for all `/opsx-*` commands with examples
 
 **2. Run the Existing Tests (10 min)**
 
@@ -967,7 +969,9 @@ Print and distribute to participants:
 - [Demo Script](./DEMO-SCRIPT.md)
 
 ### In-App Help
-> **Tip:** The Thanksgiving Dinner Planner app includes an **OpenSpec Cheat Sheet** button in the bottom-right corner. Click it anytime to see all `/opsx-*` commands with examples!
+> **Tip:** The Thanksgiving Dinner Planner app includes two helpful buttons in the bottom-right corner:
+> - **"View System Prompt"** - See the current AI system prompt (live updates when you edit the file)
+> - **"OpenSpec Cheat Sheet"** - Quick reference for all `/opsx-*` commands with examples
 
 ---
 
@@ -1072,7 +1076,7 @@ Based on the [OpenSpec workflow](https://openspec.dev/docs/quickstart), adapted 
 | Rate limit errors (429) | Normal on free tier - config has `maxConcurrency: 1` to help. Wait and retry. |
 | `promptfoo view` not working | It's a separate command, not `--view` flag. Run `promptfoo eval` first, then `promptfoo view` |
 | Playwright tests break after UI changes | Check `data-testid` attributes and click handlers - small changes can break selectors |
-| Clipboard error on `npm run dev` | Already fixed with `--no-clipboard` flag |
+| App not connecting to AI | Make sure server is running (`npm run dev` from Module 1) and `.env` has `GROQ_API_KEY` |
 
 ### When to Use Each OpenSpec Step
 
