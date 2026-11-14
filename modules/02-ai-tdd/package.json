@@ -6,7 +6,8 @@
     "precheck": "node precheck.js",
     "test": "promptfoo eval",
     "view": "promptfoo view",
-    "test:nocache": "promptfoo eval --no-cache"
+    "test:nocache": "promptfoo eval --no-cache",
+    "dev": "node ../../app/server.js"
   },
   "devDependencies": {
     "promptfoo": "^0.118.0"

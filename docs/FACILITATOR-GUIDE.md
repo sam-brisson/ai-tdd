@@ -264,8 +264,13 @@ promptfoo eval
 ```bash
 cd modules/01-deterministic-tdd
 npm run dev
-# Opens http://localhost:3000
 ```
+
+> **Facilitator tip:** Remind participants to look for the URL in their terminal output:
+> ```
+> Server running at http://localhost:3000
+> ```
+> They can **Cmd/Ctrl + click** the URL to open it in a browser.
 
 **Walk through the app features:**
 
@@ -312,6 +317,8 @@ Open side-by-side:
 **Challenge the teams:**
 > "Play with the app. Try to break it. Find something that DOESN'T work."
 
+> **Before moving on:** "Once you've found a gap, open the **OpenSpec Cheat Sheet** (button in the app) and review the `/opsx-explore` step. That's where we'll start next!"
+
 **Common discoveries:**
 - Data lost on refresh (no persistence)
 - Can't delete a dish
@@ -352,27 +359,86 @@ Open side-by-side:
 > You don't write code until the test exists.
 > Everything traces back to a documented requirement."
 
-**When to use each step:**
-- **Simple bug fix**: proposal → tasks → derive (skip design)
-- **New feature**: proposal → design → tasks → derive
-- **AI feature**: ALWAYS include design (prompt strategy matters)
+**IMPORTANT - Always use the full flow in this workshop:**
+
+> **Facilitator note:** Even for simple features, we ALWAYS go through ALL steps:
+> explore → propose → design → tasks → derive → implement → archive
+>
+> Our goal is to TEACH participants the complete workflow. Skipping steps
+> (even when they could be skipped in practice) defeats the purpose.
+> We want them to learn the full flow with concrete examples.
 
 ---
 
 ### Phase 1.5: Spec Your Fix (30 min)
 
-**Goal:** Use OpenSpec to document the bug fix BEFORE writing code.
+**Goal:** Use the FULL OpenSpec workflow to document the bug fix BEFORE writing code.
 
-This is the core TDD workflow: spec → test → implement.
+> **Facilitator note:** We go through ALL steps here to teach the complete workflow.
+> Participants need to see the full flow with a real example.
 
 #### Demo: Fix the Persistence Bug
 
-**Walk through as a group:**
+**Walk through as a group using the full OpenSpec workflow:**
 
-**Step 1: Add the requirement to tasks.md (5 min)**
+**Step 1: Explore (3 min)**
 
-Open `openspec/changes/guest-management-feature/tasks.md` and add:
+Have participants describe their gap in plain language:
+```
+/opsx-explore I don't want to lose what I typed in when I hit refresh
+```
 
+Claude will research whether this is feasible and suggest an approach.
+
+**Step 2: Propose (3 min)**
+```
+/opsx-propose data-persistence
+```
+
+Creates `openspec/changes/data-persistence/proposal.md`:
+```markdown
+# Data Persistence
+
+## Why
+Users lose all their guests and dishes when they refresh the page.
+This is frustrating and makes the app feel unreliable.
+
+## What Changes
+Save data to localStorage so it persists across page refreshes.
+
+## Success Criteria
+- [ ] Guest data persists after page refresh
+- [ ] Dish data persists after page refresh
+```
+
+**Step 3: Design (3 min)**
+```
+/opsx-design data-persistence
+```
+
+Creates `openspec/changes/data-persistence/design.md`:
+```markdown
+# Data Persistence - Design
+
+## Technical Approach
+Use browser localStorage to save and restore app state.
+
+## Implementation
+- Add `saveState()` function to save on changes
+- Add `loadState()` function to restore on page load
+- Call saveState() whenever guests or dishes change
+
+## Test Strategy
+- Type: Deterministic (Playwright)
+- Add guest → refresh → verify guest still exists
+```
+
+**Step 4: Tasks (5 min)**
+```
+/opsx-tasks data-persistence
+```
+
+Creates `openspec/changes/data-persistence/tasks.md`:
 ```markdown
 ## Data Persistence
 
@@ -390,21 +456,12 @@ Open `openspec/changes/guest-management-feature/tasks.md` and add:
   ```
 ```
 
-**Key point:**
-> "The spec now documents WHAT we need. The test code shows HOW we'll verify it."
-
-**Step 2: Derive the test (5 min)**
-
-Copy the test from tasks.md into `dinner-form.spec.ts`:
-
-```typescript
-// OpenSpec: "Guest data persists after page refresh"
-test('persists guests after page refresh', async ({ page }) => {
-  // ... (paste the test)
-});
+**Step 5: Derive → RED (5 min)**
+```
+/opsx-derive data-persistence
 ```
 
-**Step 3: Run the test - see RED (5 min)**
+Copy the test from tasks.md into `dinner-form.spec.ts` and run:
 
 ```bash
 npm test
@@ -412,29 +469,40 @@ npm test
 
 > "11 tests: 10 pass, 1 fails. That failing test PROVES the bug exists."
 
-**Step 4: Implement the fix (10 min)**
+**Step 6: Implement → GREEN (8 min)**
+```
+/opsx-implement data-persistence
+```
 
 Add localStorage to `app/index.html`:
 - `saveState()` - save to localStorage on changes
 - `loadState()` - restore on page load
 
-**Step 5: Run the test - see GREEN (5 min)**
-
+Run tests again:
 ```bash
 npm test
 ```
 
 > "11 tests: all pass! The bug is fixed AND documented."
 
+**Step 7: Archive (3 min)**
+```
+/opsx-archive data-persistence
+```
+
+Moves the completed change to `openspec/archive/`.
+
 #### Teams Practice
 
-**Each team picks ONE bug from their discovery list and:**
+**Each team picks ONE bug from their discovery list and follows the FULL workflow:**
 
-1. Adds the requirement to `tasks.md`
-2. Derives the test
-3. Runs to see RED
-4. Implements the fix
-5. Runs to see GREEN
+1. `/opsx-explore` - Describe the gap in plain language
+2. `/opsx-propose` - Create the proposal
+3. `/opsx-design` - Document the approach
+4. `/opsx-tasks` - Define acceptance criteria
+5. `/opsx-derive` - Copy tests, see RED
+6. `/opsx-implement` - Write code, see GREEN
+7. `/opsx-archive` - Clean up
 
 **Role Guidance:**
 - **Product:** Write the acceptance criterion (what should happen?)
@@ -449,370 +517,367 @@ npm test
 
 **Key transition:**
 > "You just did TDD for deterministic features with Playwright.
-> Now let's do the same thing for AI features with promptfoo.
+> Now let's do the EXACT same thing for AI features with promptfoo.
 >
-> Same workflow: Spec → Test → RED → GREEN"
+> Same workflow: Run tests → All pass → Find gap → Explore → Propose → Tasks → Derive (RED) → Implement (GREEN) → Archive"
 
-#### Precheck: Verify API Setup (5 min)
-
-**IMPORTANT:** Before starting Module 2, run the precheck utility to verify the API is working:
+#### Step 1: Precheck - Verify API Setup (5 min)
 
 ```bash
 cd modules/02-ai-tdd
 npm run precheck
 ```
 
-**Expected output:**
-```
-╔═══════════════════════════════════════════╗
-║   Module 2: AI TDD Precheck Utility       ║
-╚═══════════════════════════════════════════╝
-
-1. Checking GROQ_API_KEY...
-✓ GROQ_API_KEY is set (from .env file) (gsk_xxxx...)
-
-2. Testing API connection...
-✓ Connected to Groq API (11 models available)
-
-3. Checking model availability...
-✓ Target model available: openai/gpt-oss-20b
-✓ Grading model available: openai/gpt-oss-120b
-
-4. Testing rate limits with sample request...
-✓ Model responded: "hello"
-
-5. Checking promptfoo configuration...
-✓ promptfooconfig.yaml exists
-✓ Concurrency set to 1 (good for free tier rate limits)
-✓ system-prompt.txt exists
-
-✓ All checks passed! Ready to start Module 2.
-```
-
-**If precheck fails:**
+**Expected:** All checks pass. If not:
 
 | Issue | Solution |
 |-------|----------|
 | `GROQ_API_KEY not set` | Copy `.env.example` to `.env` and add your key |
 | `API key invalid` | Get a new key at https://console.groq.com |
-| `Model not found` | Models may have changed - check available models in precheck output |
 | `Rate limit hit` | Normal on free tier - tests will retry automatically |
 
-**Note:** The precheck is designed to catch common issues before participants get stuck. Run it yourself before the workshop and have participants run it at the start of Phase 2.
+#### Terminal Management
 
-#### Activities
+> **Facilitator tip:** Participants will need a free terminal to run promptfoo commands:
+>
+> **Option A:** Click `+` in VS Code's terminal panel for a second terminal
+> **Option B:** Press `Ctrl+C` to stop the app, run tests, then `npm run dev` to restart
 
-**1. Review the Drink Pairing Spec (10 min)**
+#### Step 2: Run Baseline Tests (5 min)
 
-**Show the existing OpenSpec:**
-
-Open side-by-side:
-- `openspec/changes/drink-pairing-feature/tasks.md`
-- `modules/02-ai-tdd/promptfooconfig.yaml`
-
-**Walk through one example:**
-
-```markdown
-# In tasks.md:
-- [x] **Suggests wine for turkey**
-  ```yaml
-  - description: "Suggests wine for traditional turkey dinner"
-    vars:
-      menu: "Roasted Turkey, Mashed Potatoes, Cranberry Sauce"
-    assert:
-      - type: llm-rubric
-        value: "Suggests at least one wine variety that pairs well with turkey"
-  ```
-```
-
-**Key difference from Playwright:**
-> "With Playwright, we assert exact values: `toContainText('Grandma Rose')`
-> With promptfoo, we use `llm-rubric` to judge BEHAVIOR, not exact words.
-> The AI might say 'Pinot Noir' or 'a nice red wine' - both could be correct."
-
-**2. Run the AI Tests (10 min)**
+Just like Module 1, we start by running the existing tests:
 
 ```bash
-cd modules/02-ai-tdd
-export GROQ_API_KEY=your_key_here
-promptfoo eval
+npm test
 ```
 
-**Show the output:** Tests should pass because `system-prompt.txt` is already written.
+**Expected output:** 5 tests, all passing (GREEN baseline)
 
-**Experiment - see RED:**
-> "Let's empty the system prompt and see what happens."
+```
+✔ Suggests wine for traditional turkey dinner
+✔ Offers beer as an alternative
+✔ Includes non-alcoholic options when requested
+✔ Explains why the pairing works
+✔ Warm and welcoming tone
+
+Successes: 5
+Failures: 0
+```
+
+> "Just like Playwright in Module 1 - we have a working baseline. All tests pass."
+
+#### Step 3: Explore the App (5 min)
+
+Have participants try the AI feature:
 
 ```bash
-echo "" > system-prompt.txt
-promptfoo eval
-```
-
-> "Tests fail! The AI doesn't know how to behave without instructions."
-
-**Restore the prompt:**
-```bash
-git checkout system-prompt.txt
-```
-
-**3. Add a New AI Requirement (25 min)**
-
-**Teams add to `tasks.md`:**
-
-```markdown
-## Follow-up Questions (Workshop Addition)
-
-- [ ] **AI suggests follow-up questions**
-  ```yaml
-  - description: "Suggests clickable follow-up questions"
-    vars:
-      menu: "Turkey, Mashed Potatoes, Pumpkin Pie"
-    assert:
-      - type: llm-rubric
-        value: "Includes 2-3 suggested follow-up questions (e.g., about budget, alternatives, or specific dishes)"
-  ```
-```
-
-**Derive the test:**
-Copy the YAML into `promptfooconfig.yaml` and run:
-
-```bash
-promptfoo eval
-```
-
-**Expected:** Test FAILS (RED) - system prompt doesn't mention follow-ups.
-
-**Fix the prompt:**
-Add to `system-prompt.txt`:
-```
-After your suggestions, offer 2-3 follow-up questions like:
-- "What about a budget-friendly option?"
-- "Any white wine alternatives?"
-```
-
-**Run again:** Test PASSES (GREEN)
-
-**Key insight:**
-> "Same cycle: Spec → Test → RED → GREEN.
-> Works for deterministic features AND AI behavior."
-
----
-
-### Phase 3: Implement (GREEN) (60 min)
-
-**Goal:** Write system prompts that make tests pass.
-
-#### Activities
-
-**1. Write Minimal Prompt (20 min)**
-
-**Live Demo First:**
-
-Start with empty `system-prompt.txt`, run tests (all fail).
-
-Then add minimal prompt:
-```
-You are a customer support assistant for Acme Co.
-
-Help customers with returns, orders, and product questions.
-Be friendly and professional.
-```
-
-Run tests again. Some pass! Some still fail.
-
-**Show the feedback loop:**
-```bash
-# Edit system-prompt.txt
-# Save
-promptfoo eval --no-cache  # Force fresh eval
-# Check results
-# Repeat
-```
-
-**Then: Teams work independently**
-
-**2. Iterate Based on Feedback (30 min)**
-
-**Strategy:** Fix one failing test at a time.
-
-**Example iteration:**
-
-**Test fails:** "Declines off-topic requests"
-**Failing output:** Chatbot discusses politics
-
-**Fix in system-prompt.txt:**
-```
-GUARDRAILS:
-- Do not discuss politics, religion, or competitors
-- Politely redirect off-topic questions to how you can help
-```
-
-**Re-run:**
-```bash
-promptfoo eval --filter-pattern "off-topic"
-```
-
-Test now passes!
-
-**Facilitator Tips:**
-- Encourage small changes between test runs
-- Remind teams: tests are the spec, not their intuition
-- If stuck, use `promptfoo view` to see LLM's actual responses in a web UI
-
-**3. Reach GREEN (10 min)**
-
-**Goal:** All 5+ tests passing.
-
-When a team reaches all GREEN:
-```
-┌─────────────────────────────────────────────────────────────┐
-│ ✅ All tests passed!                                        │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Celebrate!** Ring a bell, give stickers, whatever.
-
-Then ask:
-> "Great! But is it done?
-> Let's test it with REAL conversations."
-
----
-
-### Phase 4: Refine (REFACTOR) (45 min)
-
-**Goal:** Discover edge cases and add a new feature using the full OpenSpec → Test → Implement cycle.
-
-#### Activities
-
-**1. Interactive Testing (15 min)**
-
-**Open the app:**
-```bash
-cd modules/01-deterministic-tdd
 npm run dev
-# Opens http://localhost:3000
 ```
 
-**Exercise:** Add dishes and click "Suggest Pairings". Try edge cases:
-- Empty menu (no dishes added)
-- All desserts, no main course
-- Unusual dishes ("Pizza", "Sushi")
+> **Reminder:** Look for `Server running at http://localhost:3000` and **Cmd/Ctrl + click** to open.
 
-**Take notes:** What would be helpful that the AI doesn't currently do?
+1. Add some dishes (Turkey, Mashed Potatoes, Pumpkin Pie)
+2. Click **"Suggest Pairings"**
+3. Click **"View System Prompt"** to see the AI instructions
 
-**2. Identify a Missing Feature (5 min)**
+**Discussion prompt:**
+> "The suggestions are good, but notice something missing?
+> How do you know if these pairing recommendations are trustworthy?
+> There are no sources or citations!"
 
-**Common discovery:** After getting pairing suggestions, users often want to ask follow-up questions like:
-- "What about a budget-friendly option?"
-- "Do you have a white wine alternative?"
-- "What pairs with the dessert specifically?"
+> **Before moving on:** "Once you've identified a gap, open the **OpenSpec Cheat Sheet** (button in the app) and review the `/opsx-explore` step. That's where we'll start next!"
 
-**Facilitator prompt:**
-> "The current app is one-shot: you get suggestions, that's it.
-> What if the AI suggested follow-up questions you could click?
->
-> Let's add this feature using OpenSpec!"
+#### Step 4: OpenSpec Workflow for Citations (25 min)
 
-**3. Spec the Enhancement (10 min)**
+Now we follow the EXACT same flow as Module 1:
 
-**Teams add to `openspec/changes/drink-pairing-feature/tasks.md`:**
+**4a. Explore** (required - start here!)
 
+> **Facilitator tip:** Encourage participants to express their idea in plain language first.
+> The explore step helps Claude understand what they want to achieve before formalizing it.
+
+Have participants describe their gap in plain text:
+```
+/opsx-explore I want the AI to cite real sources so I know the recommendations aren't just made up
+```
+
+Claude will research whether this is feasible and suggest an approach.
+
+**4b. Propose**
+```
+/opsx-propose citation-sources
+```
+
+Creates `openspec/changes/citation-sources/proposal.md`:
 ```markdown
-## Follow-up Questions (Workshop Enhancement)
+# Citation Sources
 
-- [ ] **AI suggests follow-up questions**
+## Why
+When the AI suggests drink pairings, users have no way to verify
+the recommendations. Adding citations builds trust and lets users
+learn more if they're interested.
+
+## What Changes
+The AI should cite at least one source when making recommendations
+(e.g., "According to Wine Folly..." or "Food & Wine suggests...").
+
+## Success Criteria
+- [ ] AI includes 2 relevant citations at the end of its recommendation
+```
+
+**4c. Design**
+```
+/opsx-design citation-sources
+```
+
+Creates `openspec/changes/citation-sources/design.md`:
+```markdown
+# Citation Sources - Design
+
+## Technical Approach
+Update the system prompt to instruct the AI to include 2 citations
+at the end of each recommendation.
+
+## Implementation
+- Modify `system-prompt.txt` to add citation instructions
+- Reference well-known publications: Wine Folly, Food & Wine, Wine Enthusiast
+
+## Test Strategy
+- Type: AI behavioral (promptfoo with llm-rubric)
+- Verify citations appear at end of response
+```
+
+> **Facilitator note:** Even though the design is simple here, we ALWAYS include
+> this step to teach the full workflow. Participants need to see all the steps.
+
+**4e. Tasks**
+```
+/opsx-tasks citation-sources
+```
+
+Creates `openspec/changes/citation-sources/tasks.md`:
+```markdown
+# Citation Sources - Acceptance Criteria
+
+- [ ] **Includes citation for recommendations**
   ```yaml
-  - description: "Suggests clickable follow-up questions"
+  - description: "Includes citation for pairing recommendations"
     vars:
-      menu: "Turkey, Mashed Potatoes, Pumpkin Pie"
+      menu: "Turkey, Stuffing, Cranberry Sauce"
     assert:
       - type: llm-rubric
-        value: "Includes 2-3 suggested follow-up questions the user could ask (e.g., about budget, alternatives, or specific dishes)"
-  ```
-
-- [ ] **Answers budget follow-up**
-  ```yaml
-  - description: "Handles budget question"
-    vars:
-      menu: "Turkey dinner"
-      question: "What are some budget-friendly options?"
-    assert:
-      - type: llm-rubric
-        value: "Suggests affordable wine/beer options, mentioning price range or value"
+        value: "Includes at least one citation or reference to a source for the pairing recommendation"
   ```
 ```
 
-**4. Derive and Run Tests (10 min)**
+**4f. Derive → RED**
+```
+/opsx-derive citation-sources
+```
 
-**Copy tests to promptfooconfig.yaml** and run:
+This copies the test to `promptfooconfig.yaml`. Run tests:
 
 ```bash
-cd modules/02-ai-tdd
-promptfoo eval --no-cache
+npm test
 ```
 
-**Expected:** New tests FAIL (RED) because system prompt doesn't mention follow-ups yet.
+**Expected:** 5 pass, 1 fails (RED!) - The citation test fails because the system prompt doesn't mention citations.
 
-**5. Update System Prompt (5 min)**
+> "RED! Just like Module 1. The test proves the feature doesn't exist yet."
 
-**Add to system-prompt.txt:**
+**4g. Implement → GREEN (3 iterations)**
 ```
-## Follow-up Questions
-After your suggestions, offer 2-3 follow-up questions the user might want to ask, formatted as:
-
-**Want to know more?**
-- "What about a budget-friendly option?"
-- "Any white wine alternatives?"
-- "What pairs specifically with [dish]?"
+/opsx-implement citation-sources
 ```
 
-**Run tests again:** New tests should PASS (GREEN).
+> **Facilitator note:** This is where participants learn that prompt engineering is iterative!
+> Guide them through 3 attempts. Let them experience the "failing" iterations.
 
-**Key insight:**
-> "You just completed the full cycle:
-> Spec → Test (RED) → Implement (GREEN)
+**Iteration 1 - Too weak (FAILS):**
+```
+### Citations
+When recommending pairings, cite at least one source to build trust.
+For example: "According to Wine Folly..." or "Food & Wine magazine suggests..."
+```
+Run `npm run test:nocache` → Still fails. The model ignores the instruction.
+
+> "Hmm, the model didn't follow our instruction. Let's be more explicit."
+
+**Iteration 2 - Stronger but inconsistent (FAILS):**
+```
+### Citations (REQUIRED):
+- You MUST end EVERY response with exactly 2 citations from well-known sources
+- Use publications like: Wine Folly, Food & Wine, Wine Enthusiast, Bon Appétit
+- Format: "📚 Sources: Wine Folly, Food & Wine"
+```
+Run `npm run test:nocache` → Still inconsistent. Sometimes works, sometimes doesn't.
+
+> "Better, but the model is inconsistent. We need to show it an example."
+
+**Iteration 3 - With example (PASSES):**
+
+Replace the entire system prompt with this simplified version:
+```
+# Thanksgiving Drink Pairing Assistant
+
+You are a friendly sommelier helping people plan Thanksgiving dinner drinks.
+
+## What You Do
+
+Given a menu, suggest wine, beer, AND non-alcoholic pairings. For each:
+1. Name the specific beverage (e.g., "Pinot Noir" not just "red wine", "Amber Ale" not just "beer")
+2. Briefly explain why it pairs well
+
+## Important Rules
+
+- NEVER ask clarifying questions - just give recommendations based on what you're given
+- Even minimal info like "turkey" is enough - make suggestions immediately
+- READ the actual menu and tailor suggestions to those SPECIFIC dishes
+- If dietary restrictions mention "no alcohol" or similar, you MUST include non-alcoholic options
+- Be warm and encouraging, especially for first-time hosts
+- Stay focused on drink pairings only
+
+## Citations (REQUIRED)
+
+You MUST end every response with a sources line:
+- For Western dishes: "📚 Sources: Wine Folly, Food & Wine"
+- For non-Western cuisines (Chinese, Szechuan, etc.): "📚 Based on my general knowledge as a sommelier"
+
+## Example
+
+"For your turkey dinner, I'd suggest a **Pinot Noir** - its bright acidity cuts through the richness of gravy.
+
+For beer lovers, try an **Amber Ale** - its caramel notes complement roasted flavors.
+
+For non-drinkers, **sparkling apple cider** pairs wonderfully with fall flavors!
+
+📚 Sources: Wine Folly, Food & Wine"
+
+**FINAL REMINDER**: Your response MUST end with "📚 Sources: ..." or "📚 Based on my general knowledge..." - this is required for EVERY response!
+```
+
+Run `npm run test:nocache` → **All pass!**
+
+> "GREEN! Notice what it took:
+> 1. Clear, explicit instructions (MUST, REQUIRED)
+> 2. A concrete example showing the exact format
+> 3. A reminder at the end
 >
-> The UI change (clickable buttons) would come next,
-> but the AI behavior is already tested!"
+> This is prompt engineering - iterating until behavior is consistent."
+
+**4h. Archive**
+```
+/opsx-archive citation-sources
+```
+
+Moves completed change to `openspec/archive/`.
+
+#### Key Insight
+
+> "Notice the workflow was IDENTICAL to Module 1:
+>
+> | Module 1 (Deterministic) | Module 2 (AI) |
+> |--------------------------|---------------|
+> | Playwright tests | promptfoo tests |
+> | Edit `index.html` | Edit `system-prompt.txt` |
+> | Exact assertions | Behavioral rubrics |
+>
+> Same OpenSpec workflow. Same TDD cycle. Different test framework."
 
 ---
 
-### Phase 5: Demo & Reflect (30 min)
+### Phase 3: Debrief & Reflect (15 min)
 
-**Goal:** Share learnings and establish TDD habits.
+**Goal:** Reinforce the key concepts.
+
+#### Discussion Questions
+
+1. "What's the difference between testing deterministic code vs AI behavior?"
+2. "Why do we use `llm-rubric` instead of exact string matching for AI?"
+3. "When would you use Playwright vs promptfoo in your own projects?"
+
+#### Key Takeaways
+
+- **Specs come first** - Don't write tests from thin air
+- **Tests define behavior** - The test IS the requirement
+- **Same workflow** - OpenSpec works for both deterministic and AI features
+- **RED then GREEN** - Failing tests prove the feature doesn't exist yet
+
+---
+
+### Phase 4: Extended Practice (Optional, 30 min)
+
+If time permits, teams can add more AI features:
+
+**Suggested enhancements:**
+- Budget-friendly recommendations
+- Seasonal availability notes
+- Serving temperature suggestions
+
+Each follows the same flow: `/opsx-propose` → `/opsx-tasks` → `/opsx-derive` → `/opsx-implement`
+
+---
+
+### Backup: If Tests Are Flaky
+
+AI tests can occasionally be non-deterministic. If a test fails randomly:
+
+```bash
+# Run with no cache to get fresh responses
+npm run test:nocache
+```
+
+If still flaky, the rubric may be too strict. Make it more forgiving:
+- "Should generally include..." instead of "Must include..."
+- "Suggests at least one..." instead of "Suggests exactly three..."
+
+---
+
+### Phase 5: Demo & Wrap-up (15 min)
+
+**Goal:** Celebrate and share learnings.
 
 #### Activities
 
-**1. Team Demos (15 min)**
+**1. Quick Demos (10 min)**
 
-Each team shows (3 min each):
-1. Their chatbot scenario
-2. One interesting test case
-3. Terminal output showing GREEN tests
-4. Live chat demo (1-2 exchanges)
+Each team shows:
+- Their citation feature working in the app
+- The GREEN test output
 
-**Facilitator asks:**
-> "What surprised you during testing?
-> What behavior did you NOT expect?"
+**2. Final Reflection (5 min)**
 
-**2. Reflection Circle (10 min)**
+> "You now have a complete workflow for testing ANY software:
+> - Deterministic features → Playwright
+> - AI features → promptfoo
+> - Both use OpenSpec for specs → tests → implementation
+>
+> The tools change. The workflow stays the same."
 
-**Discussion prompts:**
+---
 
-- "Before this workshop, how did you specify chatbot behavior?"
-- "What's easier about TDD? What's harder?"
-- "Who should write tests in your team?"
-- "When would you run these tests? (After every change? Daily? Before deploy?)"
+### Facilitator Cheat Sheet: Module 2 Commands
 
-**3. Next Steps (5 min)**
+```bash
+# Setup
+cd modules/02-ai-tdd
+npm run precheck
 
-**Give teams:**
-- Link to starter repo
-- Facilitator's contact for questions
-- Suggested homework: "Add 3 more tests this week"
+# Run tests
+npm test                    # Run all tests
+npm run test:nocache        # Force fresh API calls
+npm run view                # Open web UI to see results
 
-**Optional:** Set up Slack channel for sharing test cases
+# Start app (works from either module folder)
+npm run dev
 
+# OpenSpec workflow
+/opsx-explore "description"     # Investigate
+/opsx-propose citation-sources  # Create proposal
+/opsx-tasks citation-sources    # Define acceptance criteria
+/opsx-derive citation-sources   # Copy tests (RED)
+/opsx-implement citation-sources # Make tests pass (GREEN)
+/opsx-archive citation-sources  # Move to archive
 ---
 
 ## Facilitator Talking Points
@@ -982,10 +1047,12 @@ Based on the [OpenSpec workflow](https://openspec.dev/docs/quickstart), adapted 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                                                                         │
-│  0. EXPLORE (/opsx-explore) [Optional]                                  │
+│  0. EXPLORE (/opsx-explore) [Start here!]                               │
 │     - Investigate the codebase before committing to a plan              │
 │     - Think through options and trade-offs                              │
-│     - "Help me explore how [feature] should work"                       │
+│     - (Describe in plain language what you want and why)                │
+│     - Example: "/opsx-explore I don't want to lose what I typed         │
+│       in when I hit refresh"                                            │
 │                                                                         │
 │  1. PROPOSE (/opsx-propose feature-name)                                │
 │     - Create openspec/changes/feature-name/                             │

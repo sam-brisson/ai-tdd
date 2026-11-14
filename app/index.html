@@ -360,11 +360,11 @@
           Use these commands in Claude Code to manage your feature workflow:
         </p>
 
-        <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-          <strong style="color: #2563eb;">/opsx-explore</strong>
-          <div style="color: #666; font-size: 13px;">Investigate before committing to a plan</div>
+        <div style="background: #dbeafe; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 2px solid #2563eb;">
+          <strong style="color: #2563eb;">🚀 /opsx-explore — Start here!</strong>
+          <div style="color: #666; font-size: 13px;">Describe in plain language what you want and why</div>
           <code style="display: block; background: #1e293b; color: #22d3ee; padding: 8px; border-radius: 4px; margin-top: 6px; font-size: 12px;">
-            "Help me explore how deleting a guest should work"
+            /opsx-explore I don't want to lose what I typed in when I hit refresh
           </code>
         </div>
 
@@ -478,6 +478,30 @@
       selectedGuest: null
     };
 
+    // LocalStorage persistence
+    const STORAGE_KEY = 'thanksgiving-planner-data';
+
+    function saveState() {
+      const dataToSave = {
+        guests: state.guests,
+        dishes: state.dishes
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          state.guests = data.guests || [];
+          state.dishes = data.dishes || [];
+        } catch (e) {
+          // Invalid data, start fresh
+        }
+      }
+    }
+
     // Serving size recommendations (lbs per person)
     const servingSizes = {
       'Turkey': 1.5,
@@ -516,6 +540,7 @@
 
       state.guests.push({ name, restriction: null });
       renderGuests();
+      saveState();
       guestInput.value = '';
     });
 
@@ -558,6 +583,7 @@
       }
       modal.classList.remove('active');
       renderGuests();
+      saveState();
     });
 
     cancelRestrictionBtn.addEventListener('click', () => {
@@ -575,6 +601,7 @@
 
       state.dishes.push({ name, contributor, type, containsMeat });
       renderDishes();
+      saveState();
 
       dishInput.value = '';
       contributorInput.value = '';
@@ -836,6 +863,11 @@
         systemPromptModal.classList.remove('active');
       }
     });
+
+    // Initialize: Load saved state and render
+    loadState();
+    renderGuests();
+    renderDishes();
   </script>
 </body>
 </html>
